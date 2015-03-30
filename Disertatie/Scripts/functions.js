@@ -222,13 +222,10 @@ function ListContents(value, folderId) {
         container.append(table);
 
         $(".FolderIcon").bind('click', function () {
-            //alert($($(this).parent()).attr("cloud"));
             ListContents($($(this).parent()).attr("cloud"), $(this).attr("fileId"));
         });
 
         $(".FileIcon").bind('click', function () {
-            //alert($($(this).parent()).attr("cloud"));
-
             $.blockUI({
                 css: {
                     border: 'none',
