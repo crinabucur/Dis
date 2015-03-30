@@ -1,0 +1,22 @@
+﻿<configuration>
+  <configSections>
+
+<!--
+      *** IMPORTANT NOTE: 
+      Since version 1.9.2 the section name has changed from name="fileUpload" to name="backload" (see below). 
+      The root element must also be changed in your config file from <fileUpload> to <backload>
+      The ConfigurationSection class has changed to <section type="Backload.Configuration.BackloadSection ..." />
+      
+	  You can make the config settings in the web.config. Alternatively you can use a seperate config file
+      as shown below in most examples. Just copy this section declaration with the appropriate configSource 
+      attribute into your Web.config file.
+      For more on config options and settings refer to the wiki on GitHub (https://github.com/blackcity/Backload) 
+      or use the Web.Backload.Default.config file as a starting point.
+-->    
+    <section name="backload" type="Backload.Configuration.BackloadSection, Backload, Version=1.9, Culture=neutral, PublicKeyToken=02eaf42ab375d363" requirePermission="false" />
+  </configSections>
+  <!-- 
+	<backload configSource="Web.Backload.config" /> 
+  -->
+
+</configuration>

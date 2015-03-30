@@ -1,0 +1,350 @@
+using System;
+using System.Net;
+using System.IO;
+using Newtonsoft.Json.Linq;
+using System.Collections.Generic;
+using System.Threading;
+using CloudStorage_extensions;
+using System.Text;
+
+namespace CloudStorage
+{
+    public class BoxConsumer : CloudStorageConsumer
+    {
+        public BoxConsumer()
+        {
+            name = "Box";
+            token.access_token = "NRPiR9Xd1VR0gIZyNiskM4uKGBtXVAS5"; // TODO: remove hardcoding
+        }
+
+        public override List<CloudItem> ListFilesInFolder(string folderId, IEnumerable<string> fileExtensions)
+        {
+            List<CloudItem> ret = new List<CloudItem>();
+            WebRequest request = WebRequest.Create("https://api.box.com/2.0/folders/" + folderId + "/items?fields=name,modified_at,modified_by");
+            request.Headers["Authorization"] = "Bearer " + token.access_token;
+            request.Method = "GET";
+
+            WebResponse response = request.GetResponse();
+
+            string body = new StreamReader(response.GetResponseStream()).ReadToEnd();
+            JObject jobj = JObject.Parse(body);
+            int foldersCount = 0;
+            foreach (JObject val in jobj["entries"])
+            {
+                CloudItem item = new CloudItem();
+                item.Id = val["id"].ToString();
+                item.Name = val["name"].ToString();
+                item.isFolder = val["type"].ToString() == "folder";
+                item.lastEditor = val["modified_by"].ToString();
+                item.lastEdited = val["modified_at"].ToString();
+                item.fileVersion = val["modified_at"].ToString();
+                item.cloudConsumer = this.name;
+                item.setImageUrl();
+                if (item.isFolder)
+                {//make sure folders are on top
+                    ret.Insert(foldersCount, item);
+                    foldersCount++;
+                }
+                else // 23.03.2015 removed filtering
+                    //foreach (string ext in fileExtensions)
+                        //if (item.Name.ToLower().EndsWith(ext.ToLower()))
+                        {
+                            ret.Add(item);
+                            //break;
+                        }
+            }
+            return ret;
+        }
+
+        public override bool TokenIsOk()
+        {
+            if (token.access_token == null)
+                return false;
+            try
+            {
+                HttpWebRequest request = (HttpWebRequest)WebRequest.Create("https://api.box.com/2.0/users/me");
+                request.Headers["Authorization"] = "Bearer " + token.access_token;
+                request.Method = "GET";
+                HttpWebResponse response = (HttpWebResponse)request.GetResponse();
+                string body = new StreamReader(response.GetResponseStream()).ReadToEnd();
+                JObject jobj = JObject.Parse(body);
+                if (jobj["type"] != null && jobj["type"].ToString() != "error")
+                    return true;
+            }
+            catch (Exception)
+            {
+            }
+            return false;
+        }
+
+
+
+        public override string getRootFolderId()
+        {
+            return "0";
+        }
+
+        public override Stream GetDocument(string fileId)
+        {
+            var request = (HttpWebRequest)WebRequest.Create("https://api.box.com/2.0/files/" + fileId + "/content");
+            request.Method = "GET";
+            request.Headers["Authorization"] = "Bearer " + token.access_token;
+            return request.GetResponse().GetResponseStream();
+        }
+
+        /// <summary>
+        /// CCB 18.02.2015
+        /// </summary>
+        /// <param name="fileId">the id of the file for which the size is needed</param>
+        /// <returns>the size of the file (bytes)</returns>
+        public override int GetFileSize(string fileId)
+        {
+            var request = (HttpWebRequest)WebRequest.Create("https://api.box.com/2.0/files/" + fileId);
+            request.Headers["Authorization"] = "Bearer " + token.access_token;
+
+            string body = new StreamReader(request.GetResponse().GetResponseStream()).ReadToEnd();
+
+            JObject retVal = JObject.Parse(body);
+            request.Abort();
+            return (retVal["size"] != null) ? (int)retVal["size"] : 0;
+        }
+
+        public override CloudItem SaveOverwriteDocument(Stream content, String fileId, String contentType = null)
+        {
+			if (content.CanSeek)
+				content.Position = 0;
+            if (contentType == null)
+                contentType = "application/vnd.ms-project";
+
+            HttpWebRequest request = null;
+            HttpWebResponse response = null;
+
+            string url = "https://upload.box.com/api/2.0/files/" + fileId + "/content";
+
+            request = (HttpWebRequest)WebRequest.Create(url);
+            var boundary = "----WebKitFormBoundarySkAQdHysJKel8YBM";
+            request.ContentType = "multipart/form-data; boundary=" + boundary;
+            request.Method = "POST";
+            request.Headers["Authorization"] = "Bearer " + token.access_token;
+
+            //the file name is required by box            
+
+            //prepare a multipart post message content            
+            string requestContent = "--" + boundary + "\r\n" + "Content-Disposition: form-data;name=\"filename\"; filename=\"" + GetFileMetadata(fileId).Name + "\"\r\nContent-Type:" + contentType + "\r\n\r\n";
+
+            byte[] bytes = System.Text.UTF8Encoding.UTF8.GetBytes(requestContent);
+
+            using (var reqStream = request.GetRequestStream())
+            {
+                reqStream.Write(bytes, 0, bytes.Length);
+                content.CopyTo(reqStream);
+                bytes = System.Text.UTF8Encoding.UTF8.GetBytes("\r\n--" + boundary + "--\r\n");
+                reqStream.Write(bytes, 0, bytes.Length);
+            }
+            using (response = (HttpWebResponse)request.GetResponse())
+            {
+                if (response.StatusCode == HttpStatusCode.OK || response.StatusCode == HttpStatusCode.Created)
+                {
+                    JObject retVal = JObject.Parse(new StreamReader(response.GetResponseStream()).ReadToEnd());
+                    var file = retVal["entries"][0] as JObject;
+                    return parseMetadataJObject(file);
+                }
+                else
+                {
+                    throw new Exception("Failed to create the document");
+                }
+            }
+        }
+
+        private UserData userData;
+        public override UserData GetUser()
+        {
+            if (userData != null) return userData;
+            HttpWebRequest request = (HttpWebRequest)WebRequest.Create("https://api.box.com/2.0/users/me");
+            request.Headers["Authorization"] = "Bearer " + token.access_token;
+            request.Method = "GET";
+            HttpWebResponse response = (HttpWebResponse)request.GetResponse();
+            string body = new StreamReader(response.GetResponseStream()).ReadToEnd();
+            var retVal = JObject.Parse(body);
+            userData = new UserData()
+            {
+                Name = retVal["name"].ToString(),
+                email = retVal["login"].ToString()
+            };
+            return userData;
+        }
+
+        public override string GetSpaceQuota()
+        {
+            HttpWebRequest request = (HttpWebRequest)WebRequest.Create("https://api.box.com/2.0/users/me");
+            request.Headers["Authorization"] = "Bearer " + token.access_token;
+            request.Method = "GET";
+            HttpWebResponse response = (HttpWebResponse)request.GetResponse();
+            string body = new StreamReader(response.GetResponseStream()).ReadToEnd();
+            var retVal = JObject.Parse(body);
+            var totalSpace = (long)retVal["space_amount"];
+            var usedSpace = (long)retVal["space_used"];
+
+            return Utils.FormatQuota(usedSpace) + " of " + Utils.FormatQuota(totalSpace);
+        } 
+
+        public override CloudItem GetFileMetadata(string fileId)
+        {
+            var request = (HttpWebRequest)WebRequest.Create("https://api.box.com/2.0/files/" + fileId);
+            request.Headers["Authorization"] = "Bearer " + token.access_token;
+
+            string body = new StreamReader(request.GetResponse().GetResponseStream()).ReadToEnd();
+
+            JObject retVal = JObject.Parse(body);
+            return parseMetadataJObject(retVal);
+        }
+
+        private CloudItem parseMetadataJObject(JObject obj)
+        {
+            string fullPath = null;
+            if (obj["path_collection"] != null)
+            {
+                StringBuilder filenamepath = new StringBuilder();
+                var path = obj["path_collection"]["entries"] as JArray;
+                foreach (JObject folder in path)
+                {
+                    filenamepath.Append(folder["name"].ToString()).Append("\\");
+                }
+                filenamepath.Append(obj["name"].ToString());
+            }
+
+            return new CloudItem()
+            {
+                Id = obj["id"].ToString(),
+                UniqueId = obj["id"].ToString(),
+                FullPath = fullPath,
+                Name = obj["name"].ToString(),
+                lastEditor = obj["modified_by"].ToString(),
+                isFolder = obj["type"].ToString() != "file",
+                cloudConsumer = this.name,
+                fileVersion = obj["modified_at"].ToString(),
+                lastEdited = obj["modified_at"].ToString()
+            };
+        }
+
+        public override List<CloudItem> ListAllFiles(IEnumerable<string> fileExtensions)
+        {
+            //TODO this is hardcoded for *.mp* and *.xml file names only
+            var ret = new List<CloudItem>();
+
+            HttpWebRequest request = (HttpWebRequest)WebRequest.Create("https://api.box.com/2.0/search?query=.mp");// file names. Also, this is limited to 60 files per page - must check pagination and make subsequent api calls if necessary
+            request.Headers["Authorization"] = "Bearer " + token.access_token;
+            request.Method = "GET";
+            request.Headers["Pragma"] = "no-cache";
+            HttpWebResponse response = (HttpWebResponse)request.GetResponse();
+            string body = new StreamReader(response.GetResponseStream()).ReadToEnd();
+            JObject retVal = JObject.Parse(body);
+
+            var entries = (JArray)retVal["entries"];
+            foreach (JObject file in entries)
+                if ((string)file["type"] == "file")
+                    foreach (string ext in fileExtensions)
+                        if (((string)file["name"]).ToLower().EndsWith(ext.ToLower()))
+                        {
+                            ret.Add(parseMetadataJObject(file));
+                            break;
+                        }
+
+            request = (HttpWebRequest)WebRequest.Create("https://api.box.com/2.0/search?query=.xml");//TODO this is limited to 60 files per page - must check pagination and make subsequent api calls if necessary
+            request.Headers["Authorization"] = "Bearer " + token.access_token;
+            request.Method = "GET";
+            request.Headers["Pragma"] = "no-cache";
+            response = (HttpWebResponse)request.GetResponse();
+            body = new StreamReader(response.GetResponseStream()).ReadToEnd();
+            retVal = JObject.Parse(body);
+
+            entries = (JArray)retVal["entries"];
+            foreach (JObject file in entries)
+            {
+                if (file["type"].ToString() == "file")
+                    foreach (string ext in fileExtensions)
+                        if ((file["name"].ToString()).ToLower().EndsWith(ext.ToLower()))
+                        {
+                            ret.Add(parseMetadataJObject(file));
+                            break;
+                        }
+            }
+
+            return ret;
+        }
+
+        public override CloudItem SaveCreateDocument(Stream content, string fileName, string contentType = null, string folderId = null)
+        {
+			if (content.CanSeek)
+				content.Position = 0;
+            HttpWebRequest request = null;
+            HttpWebResponse response = null;
+
+            string url = "https://upload.box.com/api/2.0/files/content";
+
+            request = (HttpWebRequest)WebRequest.Create(url);
+            var boundary = "----WebKitFormBoundarySkAQdHysJKel8YBM";
+            request.ContentType = "multipart/form-data; boundary=" + boundary;
+            request.Method = "POST";
+            request.Headers["Authorization"] = "Bearer " + token.access_token;
+
+            //prepare a multipart pos message content
+
+            if (folderId == null)
+            {
+                folderId = getRootFolderId();
+            }
+
+            string requestContent = string.Empty;
+            requestContent += "--" + boundary + "\r\n" + "Content-Disposition: form-data;name=\"parent_id\"\r\n\r\n" + folderId + "\r\n";
+            requestContent += "--" + boundary + "\r\n" + "Content-Disposition: form-data;name=\"filename\"; filename=\"" + fileName + "\"\r\nContent-Type:application/vnd.ms-project\r\n\r\n";
+
+            byte[] bytes = System.Text.UTF8Encoding.UTF8.GetBytes(requestContent);
+            using (var requestStream = request.GetRequestStream())
+            {
+                requestStream.Write(bytes, 0, bytes.Length);
+                content.CopyTo(requestStream);
+                bytes = System.Text.UTF8Encoding.UTF8.GetBytes("\r\n--" + boundary + "--\r\n");
+                requestStream.Write(bytes, 0, bytes.Length);
+            }
+            response = (HttpWebResponse)request.GetResponse();
+
+            var retVal = JObject.Parse(new StreamReader(response.GetResponseStream()).ReadToEnd());
+            var file = retVal["entries"][0] as JObject;
+            return parseMetadataJObject(file);
+        }
+
+        public override bool HasPermissionToEditFile(string fileId)
+        {
+            HttpWebRequest request = null;
+            request = (HttpWebRequest)WebRequest.Create("https://api.box.com/2.0/files/" + fileId + "?fields=permissions"); 
+            request.Headers["Authorization"] = "Bearer " + token.access_token;
+            request.Method = "GET";
+            HttpWebResponse response = (HttpWebResponse)request.GetResponse();
+            string body = new StreamReader(response.GetResponseStream()).ReadToEnd();
+
+            var retVal = JObject.Parse(body);
+            if ((bool)retVal["permissions"]["can_upload"]) 
+                return true;
+            return false;
+        }
+
+        public void AddComment(string fileId, string comment)
+        {
+            HttpWebRequest request = (HttpWebRequest)WebRequest.Create("https://api.box.com/2.0/comments");
+            request.Method = "POST";
+            request.ContentType = "text/json";
+            request.Headers["Authorization"] = "Bearer " + token.access_token;
+
+            string json = "{\"item\":{\"type\":\"file\"," +
+                          "\"id\":\"" + fileId + "\"}," +
+                          "\"message\":\"" + comment + "\"}";
+            byte[] bytes = System.Text.UTF8Encoding.UTF8.GetBytes(json);
+            using (var reqStream = request.GetRequestStream())
+            {
+                reqStream.Write(bytes, 0, bytes.Length);
+            }
+            request.GetResponse();
+        }
+    }
+}
