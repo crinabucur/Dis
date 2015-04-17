@@ -44,6 +44,11 @@ namespace CloudStorage
             return "/";
         }
 
+        public override void DeleteFile(string fileId)
+        {
+            throw new NotImplementedException();
+        }
+
         public override CloudFileData GetDocument(CloudItem item)
         {
             actualFileId = item.Id;
@@ -75,11 +80,11 @@ namespace CloudStorage
                     foldersCount++;
                 }
                 else
-                    foreach (string ext in fileExtensions)
-                        if (item.Name.ToLower().EndsWith(ext.ToLower()))
+                    //foreach (string ext in fileExtensions)
+                        //if (item.Name.ToLower().EndsWith(ext.ToLower()))
                         {
                             ret.Add(item);
-                            break;
+                            //break;
                         }
             }
 			request.Abort ();
@@ -205,7 +210,7 @@ namespace CloudStorage
 
         private CloudItem parseMetadataJObject(JObject obj)
         {
-            return new CloudItem()
+            CloudItem item = new CloudItem
             {
                 Id = obj["path"].ToString(),
                 UniqueId = obj["rev"].ToString(),
@@ -215,6 +220,9 @@ namespace CloudStorage
                 fileVersion = obj["rev"].ToString(),
                 lastEdited = obj["modified"].ToString()
             };
+
+            item.setImageUrl();
+            return item;
         }
 
         public override List<CloudItem> ListAllFiles(IEnumerable<string> fileExtensions)

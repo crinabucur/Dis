@@ -329,6 +329,15 @@ namespace CloudStorage
             return false;
         }
 
+        public override void DeleteFile(string fileId)
+        {
+            HttpWebRequest request = (HttpWebRequest)WebRequest.Create("https://api.box.com/2.0/files/" + fileId);
+            request.Headers["Authorization"] = "Bearer " + token.access_token;
+            request.Method = "DELETE";
+            request.GetResponse();
+            request.Abort();
+        }
+
         public void AddComment(string fileId, string comment)
         {
             HttpWebRequest request = (HttpWebRequest)WebRequest.Create("https://api.box.com/2.0/comments");

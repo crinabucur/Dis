@@ -31,6 +31,7 @@ namespace CloudStorage
 		public String lastEditor; //user who last edited
         public String lastEdited; //date string of last update
 	    public string imageUrl;
+	    public bool IsKnownType = true;
 
 	    public void setImageUrl()
 	    {
@@ -64,6 +65,7 @@ namespace CloudStorage
                 default:
 	            {
                     imageUrl = "Images/unknownIcon_64x64.png";
+	                IsKnownType = false;
 	                break;
 	            }
 	        }
@@ -106,6 +108,7 @@ namespace CloudStorage
         public abstract Stream GetDocument(string fileId);
 	    public abstract int GetFileSize(string fileId);
 	    public abstract bool HasPermissionToEditFile(string fileId);
+	    public abstract void DeleteFile(string fileId);
 
         /// <summary>
         /// A version of the GetDocument method which returns a CloudFileData - a convenient way to stick file metadata and content stream together

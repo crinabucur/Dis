@@ -36,7 +36,7 @@ namespace Disertatie
         private void Session_Start(object sender, EventArgs e)
         {
             #region Cloud Consumers Init
-            //dropbox
+            //Dropbox
             DropboxConsumer dropbox = new DropboxConsumer();
             dropbox.config.appKey = ConfigurationManager.AppSettings["DropBoxAppKey"];
             dropbox.config.appSecret = ConfigurationManager.AppSettings["DropBoxAppSecret"];
@@ -44,7 +44,7 @@ namespace Disertatie
             dropbox.config.tokenUri = "https://api.dropbox.com/1/oauth2/token";
             Session["dropboxConsumer"] = dropbox;
 
-            //box
+            //Box
             BoxConsumer box = new BoxConsumer();
             box.config.appKey = ConfigurationManager.AppSettings["BoxClientId"];
             box.config.appSecret = ConfigurationManager.AppSettings["BoxClientSecret"];
@@ -52,7 +52,7 @@ namespace Disertatie
             box.config.tokenUri = "https://www.box.com/api/oauth2/token";
             Session["boxConsumer"] = box;
 
-            //google drive
+            //Google Drive
             GoogleDriveConsumer googledrive = new GoogleDriveConsumer();
             googledrive.config.appKey = ConfigurationManager.AppSettings["googleConsumerKey"];
             googledrive.config.appSecret = ConfigurationManager.AppSettings["googleConsumerSecret"];
@@ -61,7 +61,7 @@ namespace Disertatie
             googledrive.config.scope = "https://www.googleapis.com/auth/drive+https://www.googleapis.com/auth/drive.install";
             Session["googledriveConsumer"] = googledrive;
 
-            //onedrive
+            //OneDrive
             OneDriveConsumer onedrive = new OneDriveConsumer();
             onedrive.config.appKey = ConfigurationManager.AppSettings["OneDriveClientId"]; //null;//initiated on page load depending on the url domain
             onedrive.config.appSecret = ConfigurationManager.AppSettings["OneDriveClientSecret"];// null;//initiated on page load depending on the url domain
@@ -70,11 +70,11 @@ namespace Disertatie
             onedrive.config.scope = "wl.skydrive_update wl.contacts_skydrive";
             Session["onedriveConsumer"] = onedrive;
 
-            //sharepoint
+            //SharePoint
             SharepointConsumer sharepoint = new SharepointConsumer();
             Session["sharepointConsumer"] = sharepoint;
 
-            //basecamp
+            //BaseCamp
             BasecampConsumer basecamp = new BasecampConsumer();
             basecamp.appName = ConfigurationManager.AppSettings["baseCampApplicationName"]; //basecamp specific
             basecamp.config.appKey = ConfigurationManager.AppSettings["baseCampClientConsumerKey"];

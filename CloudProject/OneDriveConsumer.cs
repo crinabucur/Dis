@@ -228,5 +228,10 @@ namespace CloudStorage
                 return true;
             return false; // ideally, a distinction should be made between users that could edit and only they should get the "API limitation" message
         }
+
+        public override void DeleteFile(string fileId)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

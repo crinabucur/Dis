@@ -61,7 +61,70 @@
     cursor: pointer;
 }
 
+.FolderCell {
+    /*display: table-cell!important;*/
+}
+
+.FileCell {
+    /*display: table-cell!important;*/
+}
+
 /*.SelectableFolderGrid {
     background: url('../Images/folderIcon_64x64.png') no-repeat scroll center center transparent;
     cursor: pointer;
 }*/
+
+.DropdownArrow {
+    position: absolute;
+    top: 2px;
+    background-image: url('../Images/dropdownArrow.png');
+    height: 12px;
+    width: 12px;
+    display: table-cell;
+    display: none;
+    cursor: pointer;
+}
+
+.DropdownArrow:hover {
+    position: absolute;
+    top: 2px;
+    background-image: url('../Images/dropdownArrow_selected.png');
+    height: 12px;
+    width: 12px;
+    display: table-cell;
+    display: none;
+    cursor: pointer;
+}
+
+.DropdownArrowSelected {
+    background-image: url('../Images/dropdownArrow_selected.png')!important;
+}
+
+.DropdownArrowSelected:hover {
+    background-image: url('../Images/dropdownArrow_selected.png')!important;
+}
+
+.ui-menu { width: 150px; overflow:hidden}
+
+#ContextualMenuContainer li{
+    font-size: 13px;
+    color: teal!important;
+}
+
+/*.ui-menu-item.ui-state-focus 
+{ 
+    width: 150px;
+    background: lightblue url("themes/base/images/ui-bg_glass_75_dadada_1x400.png") 50% 50% repeat-x!important;
+}
+
+.ui-menu-item.ui-state-focus
+{ 
+    width: 150px;
+    background: lightblue url("themes/base/images/ui-bg_glass_75_dadada_1x400.png") 50% 50% repeat-x!important;
+}
+
+.ui-menu-item:hover {
+    width: 150px;
+    background: lightblue url("themes/base/images/ui-bg_glass_75_dadada_1x400.png") 50% 50% repeat-x!important;
+}*/
+

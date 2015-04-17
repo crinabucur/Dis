@@ -364,7 +364,12 @@ namespace CloudStorage
 			return (low | 4) == low;
 		}
 
-		public override string GenerateShareUrlParam (CloudItem item)
+        public override void DeleteFile(string fileId)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override string GenerateShareUrlParam (CloudItem item)
 		{
 		    string filePath = item.Id.Replace(config.authorizeUri, "");
             return name + "://" + config.authorizeUri + "://" + Uri.EscapeDataString(filePath.Substring(1));

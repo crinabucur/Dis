@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.Eventing.Reader;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Web;
@@ -43,10 +44,19 @@ namespace Disertatie
 
             IDictionary<string, string> ret = null;
             
-            CloudStorageConsumer cloudConsumer = HttpContext.Current.Session[cloud.ToLower() + "Consumer"] as CloudStorageConsumer;
-            if (folderId == null)
+            var cloudConsumer = HttpContext.Current.Session[cloud.ToLower() + "Consumer"] as CloudStorageConsumer;
+            if (folderId == null || folderId == "null")
                 folderId = cloudConsumer.getRootFolderId();
             return cloudConsumer.ListFilesInFolder(folderId, extensions);
+        }
+
+        [WebMethod]
+        public static void DeleteFile(string cloud, string fileId)
+        {
+            var cloudConsumer = HttpContext.Current.Session[cloud.ToLower() + "Consumer"] as CloudStorageConsumer;
+            if (cloudConsumer == null) return;
+
+            cloudConsumer.DeleteFile(fileId);
         }
 
         [WebMethod]

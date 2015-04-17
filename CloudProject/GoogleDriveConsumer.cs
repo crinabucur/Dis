@@ -315,5 +315,14 @@ namespace CloudStorage
             }
             return false;
         }
+
+        public override void DeleteFile(string fileId) // TODO: TEST!!!!!
+        {
+            HttpWebRequest request = (HttpWebRequest)WebRequest.Create("https://www.googleapis.com/drive/v2/files/" + fileId);
+            request.Headers["Authorization"] = "Bearer " + token.access_token;
+            request.Method = "DELETE";
+            request.GetResponse();
+            request.Abort();
+        }
     }
 }

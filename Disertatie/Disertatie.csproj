@@ -319,7 +319,7 @@
     <Content Include="Content\themes\base\images\ui-icons_454545_256x240.png" />
     <Content Include="Content\themes\base\images\ui-icons_888888_256x240.png" />
     <Content Include="Content\themes\base\images\ui-icons_cd0a0a_256x240.png" />
-    <Content Include="Content\themes\base\jquery-ui.css" />
+    <Content Include="Content\themes\base\jquery-ui-1.11.4.css" />
     <Content Include="Content\themes\base\jquery.ui.accordion.css" />
     <Content Include="Content\themes\base\jquery.ui.all.css" />
     <Content Include="Content\themes\base\jquery.ui.autocomplete.css" />
@@ -374,6 +374,8 @@
     <Content Include="Images\box.png" />
     <Content Include="Images\bullet.png" />
     <Content Include="Images\dropbox.png" />
+    <Content Include="Images\dropdownArrow.png" />
+    <Content Include="Images\dropdownArrow_selected.png" />
     <Content Include="Images\File Icons\bmp.png" />
     <Content Include="Images\File Icons\doc.png" />
     <Content Include="Images\File Icons\docx.png" />
@@ -410,12 +412,12 @@
     <Content Include="packages.config" />
     <Content Include="Handlers\AjaxFileHandler.ashx" />
     <Content Include="Handlers\mp4.ashx" />
+    <Content Include="Handlers\FileDownloadHandler.ashx" />
     <None Include="Scripts\jquery-1.8.2.intellisense.js" />
     <Content Include="Scripts\functions.js" />
     <Content Include="Scripts\jquery-1.8.2.js" />
     <Content Include="Scripts\jquery-1.8.2.min.js" />
-    <Content Include="Scripts\jquery-ui-1.8.24.js" />
-    <Content Include="Scripts\jquery-ui-1.8.24.min.js" />
+    <Content Include="Scripts\jquery-ui-1.11.4.js" />
     <Content Include="Scripts\jquery.blockUI.js" />
     <Content Include="Scripts\jquery.collision.js" />
     <Content Include="Scripts\jquery.coords.js" />
@@ -560,6 +562,9 @@
     </Compile>
     <Compile Include="Handlers\AjaxFileHandler.ashx.cs">
       <DependentUpon>AjaxFileHandler.ashx</DependentUpon>
+    </Compile>
+    <Compile Include="Handlers\FileDownloadHandler.ashx.cs">
+      <DependentUpon>FileDownloadHandler.ashx</DependentUpon>
     </Compile>
     <Compile Include="Handlers\mp4.ashx.cs">
       <DependentUpon>mp4.ashx</DependentUpon>

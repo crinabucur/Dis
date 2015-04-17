@@ -83,7 +83,30 @@ $(document).ready(function () {
             ListContents(clouds[i], null);
         }
     }
+
+    $(document).click(function (e) {
+        CloseContextualMenu(e);
+    });
 });
+
+function CloseContextualMenu(e) {
+    var cancelDefaultAction = false;
+    if ($(".DropdownArrowSelected").length > 0) {
+        $(".DropdownArrowSelected").hide();
+        $(".DropdownArrowSelected").removeClass("DropdownArrowSelected");
+    }
+
+    // remove contextual menu if it exists
+    if ($("#ContextualMenuContainer").length > 0) {
+        $("#ContextualMenuContainer").remove();
+        cancelDefaultAction = true;
+    }
+        
+    if (typeof e != "undefined" && e != null)
+        e.stopPropagation();
+
+    return cancelDefaultAction;
+}
 
 function SetLayoutCookie() {
     var clouds = ["GoogleDrive", "OneDrive", "Dropbox", "Box", "SharePoint", "Device"];
@@ -115,7 +138,7 @@ function ListContents(value, folderId) {
     if ($("#" + value.toString()).length == 0) { // if the cloud is logged in and the page is Default
 
         var container = $('#gridCell' + value.toString());
-        
+
         // remove existing items
         container.find(".TableItems, .SwitchLayoutLink").remove();
 
@@ -135,7 +158,7 @@ function ListContents(value, folderId) {
         $.ajax({
             type: "POST",
             url: "../Default.aspx/ListFilesInFolder",
-            data: '{ "cloud" : "' + value + '" , "folderId" :' + folderId + ', "extensions" : null}',
+            data: '{ "cloud" : "' + value + '" , "folderId" :' + JSON.stringify(folderId) + ', "extensions" : null}',
             //data: { cloud:value, folderId:folderId, extensions:null },
             contentType: "application/json; charset=utf-8",
             dataType: "json",
@@ -172,7 +195,7 @@ function ListContents(value, folderId) {
             items.unshift(goBackFolder);
             itemsCount++;
         }
-        
+
         container.append("<a class='SwitchLayoutLink'>View as List</a>");
 
         // TODO: optimization - this doesn't need to be retrieved with every listing (?)
@@ -185,7 +208,7 @@ function ListContents(value, folderId) {
             contentType: "application/json; charset=utf-8",
             dataType: "json",
             async: true,
-            success: function (resp) {
+            success: function(resp) {
                 var quota = resp.d;
                 container.find('#quota' + value.toString()).text(quota);
             }
@@ -196,16 +219,20 @@ function ListContents(value, folderId) {
 
         var row = $("<tr></tr>");
         for (var k = 0; k < itemsCount; k++) {
-            var cell = "<td style='padding:6px 1px 10px; width:" + (itemWidth - 1) + "px; min-width:" + (itemWidth - 1) + "px; height:" + itemWidth + "px;'><div id='item" + k + value + "' cloud='" + value + "' style='text-align:center; max-width:" + (itemWidth - 1) + "px;'>";
+            var type = items[k].isFolder ? "Folder" : "File";
+            var dropdownOffset = itemWidth - 13;
+            var cell = "<td class='" + type + "Cell' style='padding:6px 1px 10px; width:" + (itemWidth - 1) + "px; min-width:" + (itemWidth - 1) + "px; height:" + itemWidth + "px;'>" +
+                "<div style='display:table-cell'><div style='position:relative'><div class='DropdownArrow' style='left:" + dropdownOffset + "px;' type='" + type + "' known='" + items[k].IsKnownType + "'></div></div></div>" +
+                "<div id='item" + k + value + "' cloud='" + value + "' style='text-align:center; max-width:" + (itemWidth - 1) + "px;'>";
             if (items[k].isFolder) {
-                cell += "<img fileId='" + items[k].Id + "' class='FolderIcon' src='" + items[k].imageUrl + "'/></div>"; // TODO: get from server side the URL to the appropriate image (switch case) / extend CloudItem
+                cell += "<img fileId='" + items[k].Id + "' class='FolderIcon' src='" + items[k].imageUrl + "' cloud='" + value + "'/></div>";
             } else {
-                cell += "<img fileId='" + items[k].Id + "' class='FileIcon' src='" + items[k].imageUrl + "'/></div>"; // TODO: get from server side the URL to the appropriate image (switch case)/ extend CloudItem
+                cell += "<img fileId='" + items[k].Id + "' class='FileIcon' src='" + items[k].imageUrl + "' known='" + items[k].IsKnownType + "' cloud='" + value + "'/></div>";
             }
 
             cell += "<div style='width:100%; max-width:" + (itemWidth - 1) + "px; height:40px; text-align:center; text-size:12px; overflow-x:hidden; overflow-y:hidden;' title='" + items[k].Name + "'>" +
                 items[k].Name + "</div></td>";
-            
+
             if ((k % itemsPerLine == 0)) {
                 table.append(row);
                 row = $("<tr></tr>");
@@ -221,50 +248,148 @@ function ListContents(value, folderId) {
         }
         container.append(table);
 
-        $(".FolderIcon").bind('click', function () {
-            ListContents($($(this).parent()).attr("cloud"), $(this).attr("fileId"));
+        $(".FolderIcon").bind(
+            'click', function (e) {
+                var cancelDefaultAction = CloseContextualMenu(e);
+                if (cancelDefaultAction != true)
+                    ListContents($($(this).parent()).attr("cloud"), $(this).attr("fileId"));
+            }
+        );
+
+        $(".FileIcon").bind('click', function (e) {
+            var cancelDefaultAction = CloseContextualMenu(e);
+            if (cancelDefaultAction != true) {
+                $.blockUI({
+                    css: {
+                        border: 'none',
+                        //padding: '15px',
+                        backgroundColor: '#000', // '#000'
+                        '-webkit-border-radius': '10px',
+                        '-moz-border-radius': '10px',
+                        //opacity: .5,
+                        color: '#fff',
+                        //top: '',
+                        //left:'',
+                        width: '',
+                        'max-width': '90%',
+                        'max-height': '90%'
+                    },
+                    overlayCSS: {
+                        backgroundColor: '#000',
+                        cursor: 'pointer'
+                    }
+                });
+                $('.blockOverlay').click($.unblockUI);
+
+                var video = $("<video controls autoplay='autoplay' style='text-align:center; position:relative;'><source src='Handlers/mp4.ashx' type='video/mp4'></video>");
+                $('.blockUI.blockMsg.blockPage').append(video);
+                $('.blockUI.blockMsg.blockPage').width(video.width());
+                //alert(video.width());
+                //
+
+                //var video = $("<video width='320' height='240' controls autoplay='autoplay'><source src='Handlers/mp4.ashx' type='video/mp4'></video>");
+                //$("#body").append(video);
+            }
         });
 
-        $(".FileIcon").bind('click', function () {
-            $.blockUI({
-                css: {
-                    border: 'none',
-                    //padding: '15px',
-                    backgroundColor: '#000', // '#000'
-                    '-webkit-border-radius': '10px',
-                    '-moz-border-radius': '10px',
-                    //opacity: .5,
-                    color: '#fff',
-                    //top: '',
-                    //left:'',
-                    width: '',                    
-                    'max-width':'90%',
-                    'max-height': '90%'
-                },
-                overlayCSS: {
-                    backgroundColor: '#000',
-                    cursor:'pointer'
+        // Cells (folders, files) events - in grid layout only
+        $(".FolderCell, .FileCell").bind({
+            mouseenter: function () {
+                if ($(".DropdownArrowSelected").length > 0 && jQuery(this).find(".DropdownArrowSelected").length > 0) {
+                    return;
                 }
-            });
-            $('.blockOverlay').click($.unblockUI);
-
-            var video = $("<video controls autoplay='autoplay' style='text-align:center; position:relative;'><source src='Handlers/mp4.ashx' type='video/mp4'></video>");
-            $('.blockUI.blockMsg.blockPage').append(video);
-            $('.blockUI.blockMsg.blockPage').width(video.width());
-            //alert(video.width());
-            //
-
-            //var video = $("<video width='320' height='240' controls autoplay='autoplay'><source src='Handlers/mp4.ashx' type='video/mp4'></video>");
-            //$("#body").append(video);
+                jQuery(this).find(".DropdownArrow").show();
+            },
+            mouseleave: function () {
+                if ($(".DropdownArrowSelected").length > 0 && jQuery(this).find(".DropdownArrowSelected").length > 0) {
+                    return;
+                }
+                jQuery(this).find(".DropdownArrow").hide();
+            }
         });
 
-
-         
+        // Arrow events (in grid layout only?)
+        $(".DropdownArrow").bind({
+            click: function (e) {
+                if (jQuery(this).hasClass("DropdownArrowSelected")) {
+                    CloseContextualMenu(e);
+                } else {
+                    ShowContextualMenu(jQuery(this));
+                    jQuery(this).addClass("DropdownArrowSelected");
+                }
+                
+                e.stopPropagation();
+            }
+        });
     }
 }
 
+function ShowContextualMenu(callingItem) {
+    // close any existing contextual menu
+    CloseContextualMenu(null);
 
+    var type = callingItem.attr("type");
+    var leftOffset = callingItem.offset().left;
+    var topOffset = callingItem.offset().top;
+    var $contextualMenu = $("<div id='ContextualMenuContainer' style='position:absolute; left:" + (leftOffset + 1) + "px; top:" + (topOffset + 10) + "px; z-index:999'/>");
+    var $content =  $('<ul id="ContextualMenu" aria-expanded="true" role="menu"></ul>');
+    var options;
 
+    // construct contextual menu depending on item type
+    if (type.toLowerCase() == "file") {
+        options = (callingItem.attr("known") == "true") ? "<li>Preview</li>" : "<li class='ui-state-disabled'>Preview</li>";
+        options += "<li id='menuOptionDownload'>Download</li>"; // TODO: add File suffix
+        options += "<li>Share</li>";
+        options += "<li>Move or Copy</li>";
+        options += "<li id='menuOptionDelete'>Delete</li>"; // TODO: add File suffix
+    } else {
+        options  = "<li>Open</li>";
+        options += "<li>Download</li>";
+        options += "<li>Remove Folder</li>";
+    }
+
+    $content.append(options);
+    $contextualMenu.append($content);
+    $("body").append($contextualMenu);
+
+    // bind events
+    $("#menuOptionDownload").bind({
+        click: function () {
+            FileDownload(callingItem);
+        }
+    });
+
+    $("#menuOptionDelete").bind({
+        click: function () {
+            FileDelete(callingItem);
+        }
+    });
+
+    $("#ContextualMenu").menu();
+}
+
+function FileDownload(callingItem) {
+    var cell = callingItem.parent().parent().parent();
+    var icon = cell.find("img");
+    var fileId = icon.attr("fileid");
+    var cloud = icon.attr("cloud");
+    window.location = "Handlers/FileDownloadHandler.ashx?cloud=" + cloud + "&fileId=" +  fileId;
+}
+
+function FileDelete(callingItem) {
+    var cell = callingItem.parent().parent().parent();
+    var icon = cell.find("img");
+    var fileId = icon.attr("fileid");
+    var cloud = icon.attr("cloud");
+    var r = confirm("You are about to delete this file. De you want to continue?"); // TODO: this can be skipped once undo is implemented
+    if (r == true) {
+        PageMethods.DeleteFile(cloud, fileId, function () {
+            var cloudContainer = $("#gridCell" + cloud);
+            var currentFolder = cloudContainer.attr("currentfolder");
+            ListContents(cloud, currentFolder);
+        });
+    }
+}
 
 
 function ListFiles(container, cloudService, callback, saveMode, extensions, filename) {

@@ -195,5 +195,10 @@ namespace CloudStorage
         {
             throw new NotImplementedException();
         }
+
+        public override void DeleteFile(string fileId)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
