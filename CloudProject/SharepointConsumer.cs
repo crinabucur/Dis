@@ -51,17 +51,19 @@ namespace CloudStorage
 			array = jObj ["d"] ["results"] as JArray;
 			foreach (JObject folder in array) {
 				if (folderId == getRootFolderId ()) {
-					ret.Add (new CloudItem () { 
+					var item = new CloudItem { 
 						cloudConsumer = name,
 						isFolder = true,
 						Name = folder ["Title"].ToString (),
 						Id = folder ["__metadata"] ["uri"].ToString () + "/files" //+ "?$select=Url,ETag,TimeLastModified,LastModifiedBy"
-					});
+					};
+                    item.setImageUrl();
+                    ret.Add(item);
 				} else {
 					if (folder ["__metadata"] ["type"].ToString ().EndsWith(".File")) {
-						foreach (string ext in fileExtensions)
-							if (folder["Name"] != null && folder ["Name"].ToString ().ToLower ().EndsWith (ext.ToLower ())) { // some folders are missing Name
-								ret.Add (new CloudItem () {
+						//foreach (string ext in fileExtensions)
+							//if (folder["Name"] != null && folder ["Name"].ToString ().ToLower ().EndsWith (ext.ToLower ())) { // some folders are missing Name
+								var item = new CloudItem {
 									Name = (folder ["Name"] != null) ? folder ["Name"].ToString () : "",
 									Id = folder ["Url"].ToString(),
 									UniqueId = config.authorizeUri + folder ["Url"],
@@ -70,18 +72,22 @@ namespace CloudStorage
 									lastEdited = folder ["TimeLastModified"].ToString (),
 									lastEditor = folder ["LastModifiedBy"] ["Name"].ToString (),
 									FullPath = folder ["Url"].ToString ()
-								});
-								break;
-							}
-                    }
+								};
+                                item.setImageUrl();
+					            ret.Add(item);
+					        //break;
+					        //}
+					}
                     else if (folder["__metadata"]["type"].ToString() == "MS.FileServices.Folder" && folder["ChildrenCount"] != null && folder["ChildrenCount"].ToString() != "0")
                     {
-						ret.Add (new CloudItem () {
+						var item = new CloudItem {
 							cloudConsumer = name,
 							isFolder = true,
 							Name = folder ["Name"].ToString (),
 							Id = folder ["Children"] ["__deferred"] ["uri"].ToString () + "?$select=Url,ETag,TimeLastModified,LastModifiedBy"
-						});
+						};
+                        item.setImageUrl();
+                        ret.Add(item);
 					}
 				}
 			}
@@ -169,29 +175,10 @@ namespace CloudStorage
             try
             {
                 // Get Request Digest token
-                HttpWebRequest request = WebRequest.Create(config.authorizeUri + "/_api/contextinfo") as HttpWebRequest;
-
-                request.CookieContainer = new CookieContainer();
-                request.CookieContainer.Add(new Uri("http://" + FedAuth.Domain), FedAuth);
-				if (rtFa != null)
-					request.CookieContainer.Add(new Uri("http://" + rtFa.Domain), rtFa);
-                request.Method = "POST";
-                request.Accept = "application/json;odata=verbose";
-                using (var reqStream = request.GetRequestStream())// solves the issue of setting content length to 0 in PCL - sharepoint wants this...
-                {
-                }
-                var response = request.GetResponse() as HttpWebResponse;
-
-                JObject metadata = JObject.Parse(new StreamReader(response.GetResponseStream()).ReadToEnd());
-
-                string formDigestValue = metadata["d"]["GetContextWebInformation"]["FormDigestValue"].ToString();
-
-                request.Abort();
+                string formDigestValue = GetFormDigestToken();
 
                 // Create a PUT Web request to upload the file
-                request =
-                    WebRequest.Create(folderId + "/RootFolder/Files/Add(url='" + fileName + "', overwrite=true)") as
-                    HttpWebRequest;
+                var request = WebRequest.Create(folderId + "/RootFolder/Files/Add(url='" + fileName + "', overwrite=true)") as HttpWebRequest;
 
                 request.Headers["Overwrite"] = "T";
                 request.Headers["X-RequestDigest"] = formDigestValue;
@@ -205,6 +192,8 @@ namespace CloudStorage
                 {
                     content.CopyTo(str);
                 }
+
+                HttpWebResponse response;
 
                 try
                 {
@@ -231,7 +220,7 @@ namespace CloudStorage
                 request.Method = "GET";
                 request.Accept = "application/json;odata=verbose";
                 response = request.GetResponse() as HttpWebResponse;
-                metadata = JObject.Parse(new StreamReader(response.GetResponseStream()).ReadToEnd());
+                JObject metadata = JObject.Parse(new StreamReader(response.GetResponseStream()).ReadToEnd());
                 string fileId = "/" + metadata["d"]["Title"] + "/" + fileName;
 
                 return GetFileMetadata(fileId);
@@ -366,7 +355,24 @@ namespace CloudStorage
 
         public override void DeleteFile(string fileId)
         {
-            throw new NotImplementedException();
+            // Get Request Digest token
+            string formDigestValue = GetFormDigestToken();
+
+            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(config.authorizeUri + "/_api/web/getFileByServerRelativeUrl('" + fileId.Replace(config.authorizeUri, "") + "')");
+            request.CookieContainer = new CookieContainer();
+            request.CookieContainer.Add(new Uri("http://" + FedAuth.Domain), FedAuth);
+            if (rtFa != null) request.CookieContainer.Add(new Uri("http://" + rtFa.Domain), rtFa);
+            request.Method = "POST";
+            //request.Headers["IF-MATCH"] = "*";
+            request.Headers["X-HTTP-Method"] = "DELETE";
+            request.Headers["X-RequestDigest"] = formDigestValue;
+            request.Accept = "application/json;odata=verbose";
+            using (var reqStream = request.GetRequestStream())// solves the issue of setting content length to 0 in PCL - sharepoint wants this...
+            {
+            }
+
+            request.GetResponse();
+            request.Abort();
         }
 
         public override string GenerateShareUrlParam (CloudItem item)
@@ -400,5 +406,27 @@ namespace CloudStorage
             //    Id = urlParam.Substring(aux + 3)
             //};
     	}
+
+        private string GetFormDigestToken()
+        {
+            // Get Request Digest token
+            HttpWebRequest request = WebRequest.Create(config.authorizeUri + "/_api/contextinfo") as HttpWebRequest;
+
+            request.CookieContainer = new CookieContainer();
+            request.CookieContainer.Add(new Uri("http://" + FedAuth.Domain), FedAuth);
+            if (rtFa != null)
+                request.CookieContainer.Add(new Uri("http://" + rtFa.Domain), rtFa);
+            request.Method = "POST";
+            request.Accept = "application/json;odata=verbose";
+            using (var reqStream = request.GetRequestStream())// solves the issue of setting content length to 0 in PCL - sharepoint wants this...
+            {
+            }
+            var response = request.GetResponse() as HttpWebResponse;
+
+            JObject metadata = JObject.Parse(new StreamReader(response.GetResponseStream()).ReadToEnd());
+            request.Abort();
+
+            return metadata["d"]["GetContextWebInformation"]["FormDigestValue"].ToString();
+        }
     }
 }

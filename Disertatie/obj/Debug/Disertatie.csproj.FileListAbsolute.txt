@@ -35,6 +35,7 @@ C:\Users\Crina\Documents\Visual Studio 2013\Projects\Disertatie\Disertatie\bin\E
 C:\Users\Crina\Documents\Visual Studio 2013\Projects\Disertatie\Disertatie\bin\Microsoft.AspNet.FriendlyUrls.dll
 C:\Users\Crina\Documents\Visual Studio 2013\Projects\Disertatie\Disertatie\bin\Microsoft.AspNet.Membership.OpenAuth.dll
 C:\Users\Crina\Documents\Visual Studio 2013\Projects\Disertatie\Disertatie\bin\Microsoft.AspNet.Web.Optimization.WebForms.dll
+C:\Users\Crina\Documents\Visual Studio 2013\Projects\Disertatie\Disertatie\bin\Microsoft.IdentityModel.dll
 C:\Users\Crina\Documents\Visual Studio 2013\Projects\Disertatie\Disertatie\bin\Microsoft.ScriptManager.MSAjax.dll
 C:\Users\Crina\Documents\Visual Studio 2013\Projects\Disertatie\Disertatie\bin\Microsoft.ScriptManager.WebForms.dll
 C:\Users\Crina\Documents\Visual Studio 2013\Projects\Disertatie\Disertatie\bin\Microsoft.Web.Infrastructure.dll

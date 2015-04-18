@@ -53,6 +53,11 @@
 
 var viewAsList = false;
 
+$(function initialize() {
+    //  initialize the global variables used for dialog windows
+    InitializeDialogs();
+});
+
 $(document).ready(function () {
     //alert("ready!");
     
@@ -65,12 +70,13 @@ $(document).ready(function () {
                     alert("logged in!");
                 }
                 else {
-                    if (cloud.toLowerCase() == "sharepoint")
+                    if (cloud.toLowerCase() == "sharepoint") {
                         AuthenticateSharepointDialog("open", function () {
-                            OpenFromCloud(site); //what to do after logon
+                            //OpenFromCloud(site); //what to do after logon
                         });
+                    }
                     else {
-                        jQuery(window).unbind("beforeunload");
+                        //jQuery(window).unbind("beforeunload");
                         window.location.href = " Dialogs/AuthenticateCloudService.aspx?cloud=" + cloud + "&action=open";
                     }
                 }
@@ -221,13 +227,14 @@ function ListContents(value, folderId) {
         for (var k = 0; k < itemsCount; k++) {
             var type = items[k].isFolder ? "Folder" : "File";
             var dropdownOffset = itemWidth - 13;
+            var id = (items[k].Id != null) ? items[k].Id.replace(new RegExp("'", "g"), "&apos;") : null;
             var cell = "<td class='" + type + "Cell' style='padding:6px 1px 10px; width:" + (itemWidth - 1) + "px; min-width:" + (itemWidth - 1) + "px; height:" + itemWidth + "px;'>" +
                 "<div style='display:table-cell'><div style='position:relative'><div class='DropdownArrow' style='left:" + dropdownOffset + "px;' type='" + type + "' known='" + items[k].IsKnownType + "'></div></div></div>" +
                 "<div id='item" + k + value + "' cloud='" + value + "' style='text-align:center; max-width:" + (itemWidth - 1) + "px;'>";
             if (items[k].isFolder) {
-                cell += "<img fileId='" + items[k].Id + "' class='FolderIcon' src='" + items[k].imageUrl + "' cloud='" + value + "'/></div>";
+                cell += "<img fileId='" + id + "' class='FolderIcon' src='" + items[k].imageUrl + "' cloud='" + value + "'/></div>";
             } else {
-                cell += "<img fileId='" + items[k].Id + "' class='FileIcon' src='" + items[k].imageUrl + "' known='" + items[k].IsKnownType + "' cloud='" + value + "'/></div>";
+                cell += "<img fileId='" + id + "' class='FileIcon' src='" + items[k].imageUrl + "' known='" + items[k].IsKnownType + "' cloud='" + value + "'/></div>";
             }
 
             cell += "<div style='width:100%; max-width:" + (itemWidth - 1) + "px; height:40px; text-align:center; text-size:12px; overflow-x:hidden; overflow-y:hidden;' title='" + items[k].Name + "'>" +

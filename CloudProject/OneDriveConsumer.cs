@@ -28,17 +28,18 @@ namespace CloudStorage
             foreach (JObject val in jobj["data"])
             {
                 CloudItem item = parseMetadataJObject(val);
+                item.setImageUrl();
                 if (item.isFolder)
                 {//make sure folders are on top
                     ret.Insert(foldersCount, item);
                     foldersCount++;
                 }
                 else
-                    foreach (string ext in fileExtensions)
-                        if (item.Name.ToLower().EndsWith(ext.ToLower())){
+                    //foreach (string ext in fileExtensions)
+                        //if (item.Name.ToLower().EndsWith(ext.ToLower())){
                             ret.Add(item);
-                            break;
-                        }
+                            //break;
+                        //}
             }
 
             if (folderId == getRootFolderId())//add shared folder
@@ -216,7 +217,7 @@ namespace CloudStorage
 
         public override bool HasPermissionToEditFile(string fileId)
         {
-            HttpWebRequest request = null;
+            HttpWebRequest request;
             request = (HttpWebRequest) WebRequest.Create("https://apis.live.net/v5.0/" + fileId + "?access_token=" + token.access_token);
             request.Method = "GET";
             HttpWebResponse response = (HttpWebResponse) request.GetResponse();
@@ -231,7 +232,11 @@ namespace CloudStorage
 
         public override void DeleteFile(string fileId)
         {
-            throw new NotImplementedException();
+            HttpWebRequest request;
+            request = (HttpWebRequest)WebRequest.Create("https://apis.live.net/v5.0/" + fileId + "?access_token=" + token.access_token);
+            request.Method = "DELETE";
+            request.GetResponse();
+            request.Abort();
         }
     }
 }

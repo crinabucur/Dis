@@ -49,6 +49,7 @@
             <asp:ScriptReference Path="~/Scripts/jquery.gridster.extras.js" />
             <asp:ScriptReference Path="~/Scripts/jquery.collision.js" />
             <asp:ScriptReference Path="~/Scripts/utils.js" />
+            <asp:ScriptReference Path="~/Scripts/dialogs.js"/>
             <asp:ScriptReference Path="~/Scripts/functions.js"/>
             <%--<asp:ScriptReference Path="~/Scripts/jQuery.FileUpload/jquery.ui.widget.js" />--%>
             <asp:ScriptReference Path="~/Scripts/jQuery.FileUpload/jquery.iframe-transport.js"/>
@@ -132,6 +133,25 @@
             </div>
         </div>
     </footer>
+        <div id="Dialogs" style="display: none;">
+        <div id="ModalDialog">
+            <div id="ModalDialogContent" class="ui-widget-content">
+            </div>
+        </div>
+    </div>
+    <div id="DialogsContent" style="display: none">
+        <div id="DialogsContentError">
+            <table style="width: 100%; height: 100%; font-weight: bold; font-size: x-small;">
+                <tr style="height: 100%;">
+                    <td style="vertical-align: middle;">
+                        <img alt="Error Icon" src="Images/error.png" style="width: 64px; height: 64px;" />
+                    </td>
+                    <td style="width: 100%; text-align: left; vertical-align: middle;" id="DialogsContentErrorMessage">
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
     </form>
 </body>
 </html>

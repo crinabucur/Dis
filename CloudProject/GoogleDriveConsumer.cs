@@ -39,17 +39,18 @@ namespace CloudStorage
                 item.cloudConsumer = this.name;
                 item.fileVersion = val["modifiedDate"].ToString();
                 item.lastEdited = val["modifiedDate"].ToString();
+                item.setImageUrl();
                 if (item.isFolder)
                 {//make sure folders are on top
                     ret.Insert(foldersCount, item);
                     foldersCount++;
                 }
                 else
-                    foreach (string ext in fileExtensions)
-                        if (item.Name.ToLower().EndsWith(ext.ToLower()))
+                    //foreach (string ext in fileExtensions)
+                        //if (item.Name.ToLower().EndsWith(ext.ToLower()))
                         {
                             ret.Add(item);
-                            break;
+                            //break;
                         }
             }
 

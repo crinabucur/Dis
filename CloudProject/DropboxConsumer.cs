@@ -46,7 +46,20 @@ namespace CloudStorage
 
         public override void DeleteFile(string fileId)
         {
-            throw new NotImplementedException();
+            HttpWebRequest request = (HttpWebRequest)WebRequest.Create("https://api.dropbox.com/1/fileops/delete");
+            request.Headers["Authorization"] = "Bearer " + token.access_token;
+            request.Method = "POST";
+            request.ContentType = "application/x-www-form-urlencoded";
+
+            string metaData = "root=auto";
+            metaData += "&path=" + fileId;
+            byte[] bytes = Encoding.UTF8.GetBytes(metaData);
+            using (var reqStream = request.GetRequestStream())
+            {
+                reqStream.Write(bytes, 0, bytes.Length);
+            }
+            request.GetResponse();
+            request.Abort();
         }
 
         public override CloudFileData GetDocument(CloudItem item)
