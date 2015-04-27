@@ -422,6 +422,7 @@
     <Content Include="Handlers\AjaxFileHandler.ashx" />
     <Content Include="Handlers\mp4.ashx" />
     <Content Include="Handlers\FileDownloadHandler.ashx" />
+    <Content Include="Handlers\jpg.ashx" />
     <None Include="Scripts\jquery-1.8.2.intellisense.js" />
     <Content Include="Scripts\dialogs.js" />
     <Content Include="Scripts\functions.js" />
@@ -575,6 +576,9 @@
     </Compile>
     <Compile Include="Handlers\FileDownloadHandler.ashx.cs">
       <DependentUpon>FileDownloadHandler.ashx</DependentUpon>
+    </Compile>
+    <Compile Include="Handlers\jpg.ashx.cs">
+      <DependentUpon>jpg.ashx</DependentUpon>
     </Compile>
     <Compile Include="Handlers\mp4.ashx.cs">
       <DependentUpon>mp4.ashx</DependentUpon>

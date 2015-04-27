@@ -2,6 +2,6 @@ C:\Users\Crina\Documents\Visual Studio 2013\Projects\Disertatie\CloudProject\bin
 C:\Users\Crina\Documents\Visual Studio 2013\Projects\Disertatie\CloudProject\bin\ProjectViewer365\CloudStorage.pdb
 C:\Users\Crina\Documents\Visual Studio 2013\Projects\Disertatie\CloudProject\bin\ProjectViewer365\Newtonsoft.Json.dll
 C:\Users\Crina\Documents\Visual Studio 2013\Projects\Disertatie\CloudProject\bin\ProjectViewer365\Newtonsoft.Json.xml
+C:\Users\Crina\Documents\Visual Studio 2013\Projects\Disertatie\CloudProject\obj\ProjectViewer365\CloudProject.csprojResolveAssemblyReference.cache
 C:\Users\Crina\Documents\Visual Studio 2013\Projects\Disertatie\CloudProject\obj\ProjectViewer365\CloudStorage.dll
 C:\Users\Crina\Documents\Visual Studio 2013\Projects\Disertatie\CloudProject\obj\ProjectViewer365\CloudStorage.pdb
-C:\Users\Crina\Documents\Visual Studio 2013\Projects\Disertatie\CloudProject\obj\ProjectViewer365\CloudProject.csprojResolveAssemblyReference.cache

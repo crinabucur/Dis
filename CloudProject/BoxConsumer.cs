@@ -338,6 +338,23 @@ namespace CloudStorage
             request.Abort();
         }
 
+        public override bool DeleteFolder(string folderId)
+        {
+            HttpWebRequest request = (HttpWebRequest)WebRequest.Create("https://api.box.com/2.0/folders/" + folderId + "?recursive=true"); // recursive deletion
+            request.Headers["Authorization"] = "Bearer " + token.access_token;
+            request.Method = "DELETE";
+            try
+            {
+                if (((HttpWebResponse)request.GetResponse()).StatusCode == HttpStatusCode.NoContent)
+                    return true;
+            }
+            finally
+            {
+                request.Abort();
+            }
+            return false;
+        }
+
         public void AddComment(string fileId, string comment)
         {
             HttpWebRequest request = (HttpWebRequest)WebRequest.Create("https://api.box.com/2.0/comments");

@@ -109,6 +109,7 @@ namespace CloudStorage
 	    public abstract int GetFileSize(string fileId);
 	    public abstract bool HasPermissionToEditFile(string fileId);
 	    public abstract void DeleteFile(string fileId);
+        public abstract bool DeleteFolder(string folderId);
 
         /// <summary>
         /// A version of the GetDocument method which returns a CloudFileData - a convenient way to stick file metadata and content stream together

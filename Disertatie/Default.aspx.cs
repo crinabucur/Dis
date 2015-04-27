@@ -138,6 +138,25 @@ namespace Disertatie
         }
 
         [WebMethod]
+        public static void DeleteFolder(string cloud, string folderId)
+        {
+            var cloudConsumer = HttpContext.Current.Session[cloud.ToLower() + "Consumer"] as CloudStorageConsumer;
+            if (cloudConsumer == null) return;
+
+            cloudConsumer.DeleteFolder(folderId);
+        }
+
+        [WebMethod]
+        public static string ShareFileLink(string cloud, string fileId)
+        {
+            var cloudConsumer = HttpContext.Current.Session[cloud.ToLower() + "Consumer"] as CloudStorageConsumer;
+            string baseUrl = HttpContext.Current.Request.Url.GetLeftPart(UriPartial.Path);
+            baseUrl = baseUrl.Replace("/ShareFileLink", ""); // remove method names from context url
+            string shareUrl = cloudConsumer.GenerateShareUrlParam(cloudConsumer.GetFileMetadata(fileId));
+            return baseUrl + "?xid=" + Uri.EscapeDataString(shareUrl); 
+        }
+
+        [WebMethod]
         public static string GetSpaceQuota(string cloud)
         {
             if (cloud.ToLower() != "box") return ""; // TODO: remove

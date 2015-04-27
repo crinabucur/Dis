@@ -266,6 +266,8 @@ function ListContents(value, folderId) {
         $(".FileIcon").bind('click', function (e) {
             var cancelDefaultAction = CloseContextualMenu(e);
             if (cancelDefaultAction != true) {
+                var fileId = $(this).attr("fileId");
+                var cloud = $(this).attr("cloud");
                 $.blockUI({
                     css: {
                         border: 'none',
@@ -275,11 +277,17 @@ function ListContents(value, folderId) {
                         '-moz-border-radius': '10px',
                         //opacity: .5,
                         color: '#fff',
+                        //position: 'absolute',
+                        //top: '50px',
+                        //left: '50px',
+                        //margin: '50px',
                         //top: '',
                         //left:'',
-                        width: '',
-                        'max-width': '90%',
-                        'max-height': '90%'
+                        //width: '90%',
+                        //height: '90%',
+                        'min-width': '90%',
+                        'min-height': '90%',
+                        'display': 'table'
                     },
                     overlayCSS: {
                         backgroundColor: '#000',
@@ -288,9 +296,37 @@ function ListContents(value, folderId) {
                 });
                 $('.blockOverlay').click($.unblockUI);
 
-                var video = $("<video controls autoplay='autoplay' style='text-align:center; position:relative;'><source src='Handlers/mp4.ashx' type='video/mp4'></video>");
+                var video = $("<video controls id='presenting' style='text-align:center; max-width:100%; max-height:100%; position:absolute; top:50%; left:50%;'><source src='Handlers/mp4.ashx?fileId=" + fileId + "&cloud=" + cloud + "' type='video/mp4'></video>"); // autoplay='autoplay'
+
+                //var video = $("<img id='presenting' style='text-align:center; max-width:100%; max-height:100%; position:absolute; top:50%; left:50%; display:none;' src='Handlers/jpg.ashx?fileId=" + fileId + "&cloud=" + cloud + "'/>");
+
+                //$.ajax({
+                //    url: 'Handlers/jpg.ashx',
+                //    type: 'GET',
+                //    //data: { method: 'GreetMe', args: { name: 'AlexCode' } },
+                //    success: function (data) {
+                //        var video = $("<img src='Handlers/jpg.ashx' style='text-align:center; position:relative;' />");
+                //        $('.blockUI.blockMsg.blockPage').append(video);
+                //        $('.blockUI.blockMsg.blockPage').width(video.width());
+                //    }
+                //});
+
                 $('.blockUI.blockMsg.blockPage').append(video);
-                $('.blockUI.blockMsg.blockPage').width(video.width());
+
+                //video.load
+
+                $('.blockUI.blockMsg.blockPage').css("overflow", "hidden");
+                video.load(function() {
+                    var h = video.height();
+                    var w = video.width();
+                    video.css('margin-top', +h / -2 + "px");
+                    video.css('margin-left', +w / -2 + "px");
+                    video.css('cursor', 'pointer');
+                    video.show();
+                    $('.blockUI.blockMsg.blockPage').css('cursor', 'default');
+                });
+
+                //$('.blockUI.blockMsg.blockPage').width(video.width());
                 //alert(video.width());
                 //
 
@@ -345,14 +381,14 @@ function ShowContextualMenu(callingItem) {
     // construct contextual menu depending on item type
     if (type.toLowerCase() == "file") {
         options = (callingItem.attr("known") == "true") ? "<li>Preview</li>" : "<li class='ui-state-disabled'>Preview</li>";
-        options += "<li id='menuOptionDownload'>Download</li>"; // TODO: add File suffix
-        options += "<li>Share</li>";
+        options += "<li id='menuOptionDownloadFile'>Download</li>";
+        options += "<li id='menuOptionShare'>Share</li>";
         options += "<li>Move or Copy</li>";
-        options += "<li id='menuOptionDelete'>Delete</li>"; // TODO: add File suffix
+        options += "<li id='menuOptionDeleteFile'>Delete</li>"; 
     } else {
-        options  = "<li>Open</li>";
+        options = "<li id='menuOptionOpenFolder'>Open</li>";
         options += "<li>Download</li>";
-        options += "<li>Remove Folder</li>";
+        options += "<li id='menuOptionRemoveFolder'>Remove Folder</li>";
     }
 
     $content.append(options);
@@ -360,15 +396,38 @@ function ShowContextualMenu(callingItem) {
     $("body").append($contextualMenu);
 
     // bind events
-    $("#menuOptionDownload").bind({
+    $("#menuOptionDownloadFile").bind({
         click: function () {
             FileDownload(callingItem);
         }
     });
 
-    $("#menuOptionDelete").bind({
+    $("#menuOptionShare").bind({
+        click: function () {
+            FileShare(callingItem);
+        }
+    });
+
+    $("#menuOptionDeleteFile").bind({
         click: function () {
             FileDelete(callingItem);
+        }
+    });
+
+    // folder events
+    $("#menuOptionOpenFolder").bind({
+        click: function () {
+            var cell = callingItem.parent().parent().parent();
+            var icon = cell.find("img");
+            var folderId = icon.attr("fileid");
+            var cloud = icon.attr("cloud");
+            ListContents(cloud, folderId);
+        }
+    });
+
+    $("#menuOptionRemoveFolder").bind({
+        click: function () {
+            FolderDelete(callingItem);
         }
     });
 
@@ -391,6 +450,37 @@ function FileDelete(callingItem) {
     var r = confirm("You are about to delete this file. De you want to continue?"); // TODO: this can be skipped once undo is implemented
     if (r == true) {
         PageMethods.DeleteFile(cloud, fileId, function () {
+            var cloudContainer = $("#gridCell" + cloud);
+            var currentFolder = cloudContainer.attr("currentfolder");
+            ListContents(cloud, currentFolder);
+        });
+    }
+}
+
+function FileShare(callingItem){
+    var cell = callingItem.parent().parent().parent();
+    var icon = cell.find("img");
+    var fileId = icon.attr("fileid");
+    var cloud = icon.attr("cloud");
+    PageMethods.ShareFileLink(cloud, fileId, function (response) {
+        alert(response);
+    });
+}
+
+function FolderOpen(callingItem) {
+    var cell = callingItem.parent().parent().parent();
+    var icon = cell.find("img");
+    var fileId = icon.attr("fileid");
+}
+
+function FolderDelete(callingItem) {
+    var cell = callingItem.parent().parent().parent();
+    var icon = cell.find("img");
+    var fileId = icon.attr("fileid");
+    var cloud = icon.attr("cloud");
+    var r = confirm("Removing a folder will recursively delete all of its contents. De you want to continue?"); // TODO: this can be skipped once undo is implemented
+    if (r == true) {
+        PageMethods.DeleteFolder(cloud, fileId, function () {
             var cloudContainer = $("#gridCell" + cloud);
             var currentFolder = cloudContainer.attr("currentfolder");
             ListContents(cloud, currentFolder);

@@ -62,6 +62,19 @@ namespace CloudStorage
             request.Abort();
         }
 
+        public override bool DeleteFolder(string folderId)
+        {
+            try
+            {
+                DeleteFile(folderId);
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
         public override CloudFileData GetDocument(CloudItem item)
         {
             actualFileId = item.Id;

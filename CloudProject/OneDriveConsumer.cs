@@ -230,13 +230,26 @@ namespace CloudStorage
             return false; // ideally, a distinction should be made between users that could edit and only they should get the "API limitation" message
         }
 
-        public override void DeleteFile(string fileId)
+        public override void DeleteFile(string fileId)  // TODO: TEST!!!!!
         {
             HttpWebRequest request;
             request = (HttpWebRequest)WebRequest.Create("https://apis.live.net/v5.0/" + fileId + "?access_token=" + token.access_token);
             request.Method = "DELETE";
             request.GetResponse();
             request.Abort();
+        }
+
+        public override bool DeleteFolder(string folderId)  // TODO: TEST!!!!!
+        {
+            try
+            {
+                DeleteFile(folderId);
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
         }
     }
 }

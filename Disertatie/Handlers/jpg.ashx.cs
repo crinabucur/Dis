@@ -9,29 +9,30 @@ using CloudStorage;
 namespace Disertatie.Handlers
 {
     /// <summary>
-    /// Summary description for mp4
+    /// Summary description for jpg
     /// </summary>
-    public class mp4 : IHttpHandler, IRequiresSessionState
+    public class jpg : IHttpHandler, IRequiresSessionState
     {
+
         public void ProcessRequest(HttpContext context)
         {
             CloudStorageConsumer cloudConsumer = HttpContext.Current.Session[context.Request["cloud"] + "Consumer"] as CloudStorageConsumer;
-            Stream videoStream = cloudConsumer.GetDocument(context.Request["fileId"]);
-            byte[] videoArray;
-            
-            byte[] buffer = new byte[16*1024];
+            Stream imageStream = cloudConsumer.GetDocument(context.Request["fileId"]);
+            byte[] imageArray;
+
+            byte[] buffer = new byte[16 * 1024];
             using (MemoryStream ms = new MemoryStream())
             {
                 int read;
-                while ((read = videoStream.Read(buffer, 0, buffer.Length)) > 0)
+                while ((read = imageStream.Read(buffer, 0, buffer.Length)) > 0)
                 {
                     ms.Write(buffer, 0, read);
                 }
-                videoArray = ms.ToArray();
+                imageArray = ms.ToArray();
             }
 
-            HttpContext.Current.Response.ContentType = "video/mp4";
-            HttpContext.Current.Response.OutputStream.Write(videoArray, 0, videoArray.Length);
+            HttpContext.Current.Response.ContentType = "image/png";
+            HttpContext.Current.Response.OutputStream.Write(imageArray, 0, imageArray.Length);
         }
 
         public bool IsReusable

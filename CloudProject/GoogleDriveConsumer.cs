@@ -325,5 +325,18 @@ namespace CloudStorage
             request.GetResponse();
             request.Abort();
         }
+
+        public override bool DeleteFolder(string folderId) // TODO: TEST!!!!!
+        {
+            try
+            {
+                DeleteFile(folderId);
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
     }
 }

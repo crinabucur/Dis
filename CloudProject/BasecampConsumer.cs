@@ -200,5 +200,10 @@ namespace CloudStorage
         {
             throw new NotImplementedException();
         }
+
+        public override bool DeleteFolder(string folderId)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
