@@ -60,7 +60,6 @@ namespace CloudStorage
             try
             {
                 HttpWebRequest request = (HttpWebRequest)WebRequest.Create("https://apis.live.net/v5.0/me/skydrive/quota?access_token=" + token.access_token);
-                //ClientBase.AuthorizeRequest(request, AuthorizationState.AccessToken);
                 request.Method = "GET";
                 HttpWebResponse response = (HttpWebResponse)request.GetResponse();
                 string body = new StreamReader(response.GetResponseStream()).ReadToEnd();
