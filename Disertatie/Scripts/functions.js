@@ -232,9 +232,9 @@ function ListContents(value, folderId) {
                 "<div style='display:table-cell'><div style='position:relative'><div class='DropdownArrow' style='left:" + dropdownOffset + "px;' type='" + type + "' known='" + items[k].IsKnownType + "'></div></div></div>" +
                 "<div id='item" + k + value + "' cloud='" + value + "' style='text-align:center; max-width:" + (itemWidth - 1) + "px;'>";
             if (items[k].isFolder) {
-                cell += "<img fileId='" + id + "' class='FolderIcon' src='" + items[k].imageUrl + "' cloud='" + value + "'/></div>";
+                cell += "<img fileId='" + id + "' class='FolderIcon' src='" + items[k].imageUrl + "' cloud='" + value + "' type='" + items[k].Type + "'/></div>";
             } else {
-                cell += "<img fileId='" + id + "' class='FileIcon' src='" + items[k].imageUrl + "' known='" + items[k].IsKnownType + "' cloud='" + value + "'/></div>";
+                cell += "<img fileId='" + id + "' class='FileIcon' src='" + items[k].imageUrl + "' known='" + items[k].IsKnownType + "' cloud='" + value + "' type='" + items[k].Type + "'/></div>";
             }
 
             cell += "<div style='width:100%; max-width:" + (itemWidth - 1) + "px; height:40px; text-align:center; text-size:12px; overflow-x:hidden; overflow-y:hidden;' title='" + items[k].Name + "'>" +
@@ -268,37 +268,31 @@ function ListContents(value, folderId) {
             if (cancelDefaultAction != true) {
                 var fileId = $(this).attr("fileId");
                 var cloud = $(this).attr("cloud");
-                $.blockUI({
-                    css: {
-                        border: 'none',
-                        //padding: '15px',
-                        backgroundColor: '#000', // '#000'
-                        '-webkit-border-radius': '10px',
-                        '-moz-border-radius': '10px',
-                        //opacity: .5,
-                        color: '#fff',
-                        //position: 'absolute',
-                        //top: '50px',
-                        //left: '50px',
-                        //margin: '50px',
-                        //top: '',
-                        //left:'',
-                        //width: '90%',
-                        //height: '90%',
-                        'min-width': '90%',
-                        'min-height': '90%',
-                        'display': 'table'
-                    },
-                    overlayCSS: {
-                        backgroundColor: '#000',
-                        cursor: 'pointer'
-                    }
-                });
-                $('.blockOverlay').click($.unblockUI);
 
-                var video = $("<video controls id='presenting' style='text-align:center; max-width:100%; max-height:100%; position:absolute; top:50%; left:50%;'><source src='Handlers/mp4.ashx?fileId=" + fileId + "&cloud=" + cloud + "' type='video/mp4'></video>"); // autoplay='autoplay'
+                var presenting;
+                switch ($(this).attr("type")) {
+                    case "video":
+                        {
+                            presenting = $("<video controls id='presenting' style='text-align:center; max-width:100%; max-height:100%; position:absolute; top:50%; left:50%;'><source src='Handlers/mp4.ashx?fileId=" + fileId + "&cloud=" + cloud + "' type='video/mp4'></video>"); // autoplay='autoplay'
+                            break;
+                        }
+                    case "audio":
+                        {
+                            presenting = $("<audio controls id='presenting' style='text-align:center; max-width:100%; max-height:100%; position:absolute; top:50%; left:50%;'><source src='Handlers/mp3.ashx?fileId=" + fileId + "&cloud=" + cloud + "' type='audio/mpeg'></audio>"); // autoplay='autoplay'
+                            break;
+                        }
+                    case "image":
+                        {
+                            presenting = $("<img id='presenting' style='text-align:center; max-width:100%; max-height:100%; position:absolute; top:50%; left:50%; display:none;' src='Handlers/jpg.ashx?fileId=" + fileId + "&cloud=" + cloud + "'/>");
+                            break;
+                        }
+                    case "unknown":
+                        {
+                            break;
+                        }
+                }
 
-                //var video = $("<img id='presenting' style='text-align:center; max-width:100%; max-height:100%; position:absolute; top:50%; left:50%; display:none;' src='Handlers/jpg.ashx?fileId=" + fileId + "&cloud=" + cloud + "'/>");
+                //var presenting = $("<img id='presenting' style='text-align:center; max-width:100%; max-height:100%; position:absolute; top:50%; left:50%; display:none;' src='Handlers/jpg.ashx?fileId=" + fileId + "&cloud=" + cloud + "'/>");
 
                 //$.ajax({
                 //    url: 'Handlers/jpg.ashx',
@@ -311,21 +305,49 @@ function ListContents(value, folderId) {
                 //    }
                 //});
 
-                $('.blockUI.blockMsg.blockPage').append(video);
+                if (typeof presenting != "undefined") {
+                    $.blockUI({
+                        css: {
+                            border: 'none',
+                            //padding: '15px',
+                            backgroundColor: '#000', // '#000'
+                            '-webkit-border-radius': '10px',
+                            '-moz-border-radius': '10px',
+                            //opacity: .5,
+                            color: '#fff',
+                            //position: 'absolute',
+                            //top: '50px',
+                            //left: '50px',
+                            //margin: '50px',
+                            //top: '',
+                            //left:'',
+                            //width: '90%',
+                            //height: '90%',
+                            'min-width': '90%',
+                            'min-height': '90%',
+                            'display': 'table'
+                        },
+                        overlayCSS: {
+                            backgroundColor: '#000',
+                            cursor: 'pointer'
+                        }
+                    });
+                    $('.blockOverlay').click($.unblockUI);
 
-                //video.load
+                    $('.blockUI.blockMsg.blockPage').append(presenting);
 
-                $('.blockUI.blockMsg.blockPage').css("overflow", "hidden");
-                video.load(function() {
-                    var h = video.height();
-                    var w = video.width();
-                    video.css('margin-top', +h / -2 + "px");
-                    video.css('margin-left', +w / -2 + "px");
-                    video.css('cursor', 'pointer');
-                    video.show();
-                    $('.blockUI.blockMsg.blockPage').css('cursor', 'default');
-                });
-
+                    $('.blockUI.blockMsg.blockPage').css("overflow", "hidden");
+                    presenting.load(function () {
+                        var h = presenting.height();
+                        var w = presenting.width();
+                        presenting.css('margin-top', +h / -2 + "px");
+                        presenting.css('margin-left', +w / -2 + "px");
+                        presenting.css('cursor', 'pointer');
+                        presenting.show();
+                        $('.blockUI.blockMsg.blockPage').css('cursor', 'default');
+                    });
+                }
+                
                 //$('.blockUI.blockMsg.blockPage').width(video.width());
                 //alert(video.width());
                 //
@@ -417,11 +439,7 @@ function ShowContextualMenu(callingItem) {
     // folder events
     $("#menuOptionOpenFolder").bind({
         click: function () {
-            var cell = callingItem.parent().parent().parent();
-            var icon = cell.find("img");
-            var folderId = icon.attr("fileid");
-            var cloud = icon.attr("cloud");
-            ListContents(cloud, folderId);
+            FolderOpen(callingItem);
         }
     });
 
@@ -470,7 +488,9 @@ function FileShare(callingItem){
 function FolderOpen(callingItem) {
     var cell = callingItem.parent().parent().parent();
     var icon = cell.find("img");
-    var fileId = icon.attr("fileid");
+    var folderId = icon.attr("fileid");
+    var cloud = icon.attr("cloud");
+    ListContents(cloud, folderId);
 }
 
 function FolderDelete(callingItem) {

@@ -32,6 +32,7 @@ namespace CloudStorage
         public String lastEdited; //date string of last update
 	    public string imageUrl;
 	    public bool IsKnownType = true;
+	    public string Type;
 
 	    public void setImageUrl()
 	    {
@@ -46,28 +47,60 @@ namespace CloudStorage
 	        {
                 // TODO: check all
                 case "bmp":
-                case "doc":
-                case "docx":
                 case "gif":
                 case "jpeg":
                 case "jpg":
-                case "mp3":
-                case "pdf":
                 case "png":
-                case "rar": 
+                    {
+                        imageUrl = "Images/File Icons/" + extension + ".png";
+                        Type = "image";
+                        break;
+                    }
+                case "doc":
+                case "docx":
+	                {
+                        imageUrl = "Images/File Icons/" + extension + ".png";
+                        Type = "doc";
+                        break;
+	                }
+                case "pdf":
+                    {
+                        imageUrl = "Images/File Icons/" + extension + ".png";
+                        Type = "pdf";
+                        break;
+                    }
+                case "mp3":
+                    {
+                        imageUrl = "Images/File Icons/" + extension + ".png";
+                        Type = "audio";
+                        break;
+                    }
+                case "mp4":
+                    {
+                        imageUrl = "Images/unknownIcon_64x64.png"; // TODO: find image!
+                        Type = "video";
+                        break;
+                    }
                 case "txt":
+                    {
+                        imageUrl = "Images/File Icons/" + extension + ".png";
+                        Type = "text";
+                        break;
+                    }
+                case "rar": 
                 case "zip": 
-	            {
-                    imageUrl = "Images/File Icons/" + extension + ".png";
-	                break;
-	            }
-                // TODO: add video, multimedia, etc
+	                {
+                        imageUrl = "Images/File Icons/" + extension + ".png";
+                        Type = "archive";
+	                    break;
+	                }
                 default:
-	            {
-                    imageUrl = "Images/unknownIcon_64x64.png";
-	                IsKnownType = false;
-	                break;
-	            }
+	                {
+                        imageUrl = "Images/unknownIcon_64x64.png";
+                        Type = "unknown";
+	                    IsKnownType = false;
+	                    break;
+	                }
 	        }
 	    }
 	}
