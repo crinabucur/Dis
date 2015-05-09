@@ -19,6 +19,13 @@ namespace CloudStorage
             name = "Dropbox";
         }
 
+        public override List<CloudFolder> CreateOutlineDirectoryList()
+        {
+            string rootFolder = getRootFolderId();
+            var list = new List<CloudFolder>();
+            ListSubfoldersInFolder(rootFolder, "All Folders", 0, ref list);
+            return list;
+        }
 
         public override bool TokenIsOk()
         {
@@ -116,6 +123,26 @@ namespace CloudStorage
 			request.Abort ();
 
             return ret;
+        }
+
+        public override void ListSubfoldersInFolder(string folderId, string folderName, int outlineLevel, ref List<CloudFolder> list)
+        {
+            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(baseUri + "/metadata/dropbox" + folderId);
+            request.Method = "GET";
+            request.Headers["Authorization"] = "Bearer " + token.access_token;
+            HttpWebResponse response = request.GetResponse() as HttpWebResponse;
+            JObject metadata = JObject.Parse(new StreamReader(response.GetResponseStream()).ReadToEnd());
+
+            list.Add(new CloudFolder { Name = folderName, OutlineLevel = outlineLevel, Id = folderId });
+
+            foreach (JObject val in metadata["contents"])
+            {
+                CloudItem item = parseMetadataJObject(val); // TODO: optimize, no need for this!
+                if (!item.isFolder) continue;
+                
+                ListSubfoldersInFolder(item.Id, item.Name, outlineLevel + 1, ref list);
+            }
+            request.Abort();
         }
 
         public override Stream GetDocument(string fileId)

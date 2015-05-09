@@ -1,9 +1,10 @@
 using System;
 using System.Net;
 using System.IO;
+using System.Net.Http;
+using System.Net.Http.Headers;
 using Newtonsoft.Json.Linq;
 using System.Collections.Generic;
-using System.Threading;
 using CloudStorage_extensions;
 using System.Text;
 
@@ -11,10 +12,27 @@ namespace CloudStorage
 {
     public class BoxConsumer : CloudStorageConsumer
     {
+        private HttpClientHandler _handler;
+        private HttpClient _client;
+
         public BoxConsumer()
         {
             name = "Box";
             token.access_token = "NRPiR9Xd1VR0gIZyNiskM4uKGBtXVAS5"; // TODO: remove hardcoding
+
+            //PrepareRequests();
+        }
+
+        private void PrepareRequests()
+        {
+            _handler = new HttpClientHandler();
+
+            if (_handler.SupportsAutomaticDecompression)
+            {
+                _handler.AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate;
+            }
+
+            var _client = new HttpClient(_handler);
         }
 
         public override List<CloudItem> ListFilesInFolder(string folderId, IEnumerable<string> fileExtensions)
@@ -22,6 +40,7 @@ namespace CloudStorage
             List<CloudItem> ret = new List<CloudItem>();
             WebRequest request = WebRequest.Create("https://api.box.com/2.0/folders/" + folderId + "/items?fields=name,modified_at,modified_by");
             request.Headers["Authorization"] = "Bearer " + token.access_token;
+            //request.Headers["Accept-Encoding"] = "gzip, deflate";
             request.Method = "GET";
 
             WebResponse response = request.GetResponse();
@@ -56,6 +75,36 @@ namespace CloudStorage
             return ret;
         }
 
+        public override void ListSubfoldersInFolder(string folderId, string folderName, int outlineLevel, ref List<CloudFolder> list) // List<CloudFolder>
+        {
+            WebRequest request = WebRequest.Create("https://api.box.com/2.0/folders/" + folderId + "/items?fields=name"); // name,modified_at,modified_by
+            request.Headers["Authorization"] = "Bearer " + token.access_token;
+            //request.Headers["Accept-Encoding"] = "gzip, deflate";
+            request.Method = "GET";
+
+            WebResponse response = request.GetResponse();
+
+            string body = new StreamReader(response.GetResponseStream()).ReadToEnd();
+            JObject jobj = JObject.Parse(body);
+
+            list.Add(new CloudFolder { Name = folderName, OutlineLevel = outlineLevel, Id = folderId });
+
+            foreach (JObject val in jobj["entries"])
+            {
+                if (val["type"].ToString() != "folder") continue;
+
+                ListSubfoldersInFolder(val["id"].ToString(), val["name"].ToString(), outlineLevel + 1, ref list);
+            }
+        }
+
+        public override List<CloudFolder> CreateOutlineDirectoryList()
+        {
+            string rootFolder = getRootFolderId();
+            var list = new List<CloudFolder>();
+            ListSubfoldersInFolder(rootFolder, "All Folders", 0, ref list);
+            return list;
+        }
+
         public override bool TokenIsOk()
         {
             if (token.access_token == null)
@@ -64,6 +113,7 @@ namespace CloudStorage
             {
                 HttpWebRequest request = (HttpWebRequest)WebRequest.Create("https://api.box.com/2.0/users/me");
                 request.Headers["Authorization"] = "Bearer " + token.access_token;
+                //request.Headers["Accept-Encoding"] = "gzip, deflate";
                 request.Method = "GET";
                 HttpWebResponse response = (HttpWebResponse)request.GetResponse();
                 string body = new StreamReader(response.GetResponseStream()).ReadToEnd();
@@ -89,6 +139,7 @@ namespace CloudStorage
             var request = (HttpWebRequest)WebRequest.Create("https://api.box.com/2.0/files/" + fileId + "/content");
             request.Method = "GET";
             request.Headers["Authorization"] = "Bearer " + token.access_token;
+            //request.Headers["Accept-Encoding"] = "gzip, deflate";
             return request.GetResponse().GetResponseStream();
         }
 
@@ -101,6 +152,7 @@ namespace CloudStorage
         {
             var request = (HttpWebRequest)WebRequest.Create("https://api.box.com/2.0/files/" + fileId);
             request.Headers["Authorization"] = "Bearer " + token.access_token;
+            //request.Headers["Accept-Encoding"] = "gzip, deflate";
 
             string body = new StreamReader(request.GetResponse().GetResponseStream()).ReadToEnd();
 
@@ -126,6 +178,7 @@ namespace CloudStorage
             request.ContentType = "multipart/form-data; boundary=" + boundary;
             request.Method = "POST";
             request.Headers["Authorization"] = "Bearer " + token.access_token;
+            //request.Headers["Accept-Encoding"] = "gzip, deflate";
 
             //the file name is required by box            
 
@@ -162,6 +215,7 @@ namespace CloudStorage
             if (userData != null) return userData;
             HttpWebRequest request = (HttpWebRequest)WebRequest.Create("https://api.box.com/2.0/users/me");
             request.Headers["Authorization"] = "Bearer " + token.access_token;
+            //request.Headers["Accept-Encoding"] = "gzip, deflate";
             request.Method = "GET";
             HttpWebResponse response = (HttpWebResponse)request.GetResponse();
             string body = new StreamReader(response.GetResponseStream()).ReadToEnd();
@@ -178,6 +232,7 @@ namespace CloudStorage
         {
             HttpWebRequest request = (HttpWebRequest)WebRequest.Create("https://api.box.com/2.0/users/me");
             request.Headers["Authorization"] = "Bearer " + token.access_token;
+            //request.Headers["Accept-Encoding"] = "gzip, deflate";
             request.Method = "GET";
             HttpWebResponse response = (HttpWebResponse)request.GetResponse();
             string body = new StreamReader(response.GetResponseStream()).ReadToEnd();
@@ -192,6 +247,7 @@ namespace CloudStorage
         {
             var request = (HttpWebRequest)WebRequest.Create("https://api.box.com/2.0/files/" + fileId);
             request.Headers["Authorization"] = "Bearer " + token.access_token;
+            //request.Headers["Accept-Encoding"] = "gzip, deflate";
 
             string body = new StreamReader(request.GetResponse().GetResponseStream()).ReadToEnd();
 
@@ -234,6 +290,7 @@ namespace CloudStorage
 
             HttpWebRequest request = (HttpWebRequest)WebRequest.Create("https://api.box.com/2.0/search?query=.mp");// file names. Also, this is limited to 60 files per page - must check pagination and make subsequent api calls if necessary
             request.Headers["Authorization"] = "Bearer " + token.access_token;
+            //request.Headers["Accept-Encoding"] = "gzip, deflate";
             request.Method = "GET";
             request.Headers["Pragma"] = "no-cache";
             HttpWebResponse response = (HttpWebResponse)request.GetResponse();
@@ -252,6 +309,7 @@ namespace CloudStorage
 
             request = (HttpWebRequest)WebRequest.Create("https://api.box.com/2.0/search?query=.xml");//TODO this is limited to 60 files per page - must check pagination and make subsequent api calls if necessary
             request.Headers["Authorization"] = "Bearer " + token.access_token;
+            //request.Headers["Accept-Encoding"] = "gzip, deflate";
             request.Method = "GET";
             request.Headers["Pragma"] = "no-cache";
             response = (HttpWebResponse)request.GetResponse();
@@ -287,6 +345,7 @@ namespace CloudStorage
             request.ContentType = "multipart/form-data; boundary=" + boundary;
             request.Method = "POST";
             request.Headers["Authorization"] = "Bearer " + token.access_token;
+            //request.Headers["Accept-Encoding"] = "gzip, deflate";
 
             //prepare a multipart pos message content
 
@@ -319,6 +378,7 @@ namespace CloudStorage
             HttpWebRequest request = null;
             request = (HttpWebRequest)WebRequest.Create("https://api.box.com/2.0/files/" + fileId + "?fields=permissions"); 
             request.Headers["Authorization"] = "Bearer " + token.access_token;
+            //request.Headers["Accept-Encoding"] = "gzip, deflate";
             request.Method = "GET";
             HttpWebResponse response = (HttpWebResponse)request.GetResponse();
             string body = new StreamReader(response.GetResponseStream()).ReadToEnd();
@@ -333,6 +393,7 @@ namespace CloudStorage
         {
             HttpWebRequest request = (HttpWebRequest)WebRequest.Create("https://api.box.com/2.0/files/" + fileId);
             request.Headers["Authorization"] = "Bearer " + token.access_token;
+            //request.Headers["Accept-Encoding"] = "gzip, deflate";
             request.Method = "DELETE";
             request.GetResponse();
             request.Abort();
@@ -342,6 +403,7 @@ namespace CloudStorage
         {
             HttpWebRequest request = (HttpWebRequest)WebRequest.Create("https://api.box.com/2.0/folders/" + folderId + "?recursive=true"); // recursive deletion
             request.Headers["Authorization"] = "Bearer " + token.access_token;
+            //request.Headers["Accept-Encoding"] = "gzip, deflate";
             request.Method = "DELETE";
             try
             {
@@ -361,6 +423,7 @@ namespace CloudStorage
             request.Method = "POST";
             request.ContentType = "text/json";
             request.Headers["Authorization"] = "Bearer " + token.access_token;
+            //request.Headers["Accept-Encoding"] = "gzip, deflate";
 
             string json = "{\"item\":{\"type\":\"file\"," +
                           "\"id\":\"" + fileId + "\"}," +

@@ -82,6 +82,28 @@ namespace CloudStorage
             return items;
         }
 
+        public override void ListSubfoldersInFolder(string folderId, string folderName, int outlineLevel, ref List<CloudFolder> list)
+        {
+            string url = string.Format("https://basecamp.com/{0}/api/v1/projects.json", accountId);
+            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
+            request.Headers["Authorization"] = "Bearer " + token.access_token;
+            request.SetHeader("User-Agent", appName);
+            var retVal = JArray.Parse(new StreamReader(request.GetResponse().GetResponseStream()).ReadToEnd());
+
+            foreach (JObject obj in retVal)
+            {
+                list.Add(new CloudFolder { Name = obj["name"].ToString(), OutlineLevel = outlineLevel + 1, Id = obj["id"].ToString() });
+            }
+        }
+
+        public override List<CloudFolder> CreateOutlineDirectoryList()
+        {
+            string rootFolder = getRootFolderId();
+            var list = new List<CloudFolder>();
+            ListSubfoldersInFolder(rootFolder, "All Projects", 0, ref list);
+            return list;
+        }
+
         public override Stream GetDocument(string fileId)
         {
             HttpWebRequest request = WebRequest.CreateHttp(fileId);

@@ -67,6 +67,35 @@ namespace CloudStorage
             return ret;
         }
 
+        public override void ListSubfoldersInFolder(string folderId, string folderName, int outlineLevel, ref List<CloudFolder> list)
+        {
+            WebRequest request = WebRequest.Create("https://api.box.com/2.0/folders/" + folderId + "/items?fields=name");
+            request.Headers["Authorization"] = "Bearer " + token.access_token;
+            request.Method = "GET";
+
+            WebResponse response = request.GetResponse();
+
+            string body = new StreamReader(response.GetResponseStream()).ReadToEnd();
+            JObject jobj = JObject.Parse(body);
+
+            list.Add(new CloudFolder { Name = folderName, OutlineLevel = outlineLevel, Id = folderId });
+
+            foreach (JObject val in jobj["entries"])
+            {
+                if (!val["mimeType"].ToString().EndsWith(".folder")) continue;
+
+                ListSubfoldersInFolder(val["id"].ToString(), val["name"].ToString(), outlineLevel + 1, ref list);
+            }
+        }
+
+        public override List<CloudFolder> CreateOutlineDirectoryList()
+        {
+            string rootFolder = getRootFolderId();
+            var list = new List<CloudFolder>();
+            ListSubfoldersInFolder(rootFolder, "All Folders", 0, ref list);
+            return list;
+        }
+
         public override bool TokenIsOk()
         {
             if (token.access_token == null)

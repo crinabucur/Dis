@@ -270,6 +270,7 @@ function ListContents(value, folderId) {
                 var cloud = $(this).attr("cloud");
 
                 var presenting;
+                var doNotResize = false;
                 switch ($(this).attr("type")) {
                     case "video":
                         {
@@ -284,6 +285,28 @@ function ListContents(value, folderId) {
                     case "image":
                         {
                             presenting = $("<img id='presenting' style='text-align:center; max-width:100%; max-height:100%; position:absolute; top:50%; left:50%; display:none;' src='Handlers/jpg.ashx?fileId=" + fileId + "&cloud=" + cloud + "'/>");
+                            break;
+                        }
+                    case "pdf":
+                        {
+                            //presenting = $("<iframe src='../Pdf/web/viewer.html?file=http://mozilla.github.io/pdf.js/web/compressed.tracemonkey-pldi-09.pdf' width='100%' height='864px' />");
+                            //$('.blockUI.blockMsg.blockPage').css("cursor", "wait");
+                            //$("body").append("<img src='Images/loader.gif' style='position:absolute;'/>");
+                            presenting = $("<object width='100%' height='864px' data='Handlers/pdf.ashx?fileId=" + fileId + "&cloud=" + cloud + "' style='cursor:wait!important;' type='application/pdf'>" +
+                                    "<embed src='Handlers/pdf.ashx?fileId=" + fileId + "&cloud=" + cloud + "' type='application/pdf' style='cursor:wait!important;>" +
+                                        "<noembed>Your browser does not support embedded PDF files. </noembed>" +
+                                        //"<img src='Images/loader.gif'/>" +
+                                    "</embed>" +
+                                "</object>");
+
+                            //var pdfDocument;
+                            //PDFJS.getDocument("Handlers/pdf.ashx?fileId=" + fileId + "&cloud=" + cloud).then(function (pdf) {
+                            //    pdfDocument = pdf;
+                            //    //var url = URL.createObjectURL(blob);
+                            //    PDFView.load(pdfDocument, 1.5);
+                            //});
+
+                            doNotResize = true;
                             break;
                         }
                     case "unknown":
@@ -309,23 +332,14 @@ function ListContents(value, folderId) {
                     $.blockUI({
                         css: {
                             border: 'none',
-                            //padding: '15px',
-                            backgroundColor: '#000', // '#000'
+                            backgroundColor: '#000',
                             '-webkit-border-radius': '10px',
                             '-moz-border-radius': '10px',
-                            //opacity: .5,
                             color: '#fff',
-                            //position: 'absolute',
-                            //top: '50px',
-                            //left: '50px',
-                            //margin: '50px',
-                            //top: '',
-                            //left:'',
-                            //width: '90%',
-                            //height: '90%',
                             'min-width': '90%',
                             'min-height': '90%',
-                            'display': 'table'
+                            'display': 'table',
+                            cursor: 'wait'
                         },
                         overlayCSS: {
                             backgroundColor: '#000',
@@ -337,23 +351,22 @@ function ListContents(value, folderId) {
                     $('.blockUI.blockMsg.blockPage').append(presenting);
 
                     $('.blockUI.blockMsg.blockPage').css("overflow", "hidden");
-                    presenting.load(function () {
-                        var h = presenting.height();
-                        var w = presenting.width();
-                        presenting.css('margin-top', +h / -2 + "px");
-                        presenting.css('margin-left', +w / -2 + "px");
-                        presenting.css('cursor', 'pointer');
+
+                    if (!doNotResize) {
+                        presenting.load(function() {
+                            var h = presenting.height();
+                            var w = presenting.width();
+                            presenting.css('margin-top', +h / -2 + "px");
+                            presenting.css('margin-left', +w / -2 + "px");
+                            presenting.css('cursor', 'pointer');
+                            presenting.show();
+                            $('.blockUI.blockMsg.blockPage').css('cursor', 'default');
+                        });
+                    } else {
                         presenting.show();
                         $('.blockUI.blockMsg.blockPage').css('cursor', 'default');
-                    });
+                    }
                 }
-                
-                //$('.blockUI.blockMsg.blockPage').width(video.width());
-                //alert(video.width());
-                //
-
-                //var video = $("<video width='320' height='240' controls autoplay='autoplay'><source src='Handlers/mp4.ashx' type='video/mp4'></video>");
-                //$("#body").append(video);
             }
         });
 

@@ -53,6 +53,38 @@ namespace CloudStorage
             return ret;
         }
 
+        public override void ListSubfoldersInFolder(string folderId, string folderName, int outlineLevel, ref List<CloudFolder> list)
+        {
+            HttpWebRequest request = (HttpWebRequest)WebRequest.Create("https://apis.live.net/v5.0/" + folderId + "/files?access_token=" + token.access_token);
+            request.Method = "GET";
+            HttpWebResponse response = (HttpWebResponse)request.GetResponse();
+            string body = new StreamReader(response.GetResponseStream()).ReadToEnd();
+            JObject jobj = JObject.Parse(body);
+
+            list.Add(new CloudFolder { Name = folderName, OutlineLevel = outlineLevel, Id = folderId });
+
+            if (folderId == getRootFolderId()) //add shared folder
+            {
+                ListSubfoldersInFolder("me/skydrive/shared", "Shared", outlineLevel + 1, ref list);
+            }
+
+            foreach (JObject val in jobj["data"])
+            {
+                CloudItem item = parseMetadataJObject(val); // TODO: optimize, no need for this!
+                if (!item.isFolder) continue;
+
+                ListSubfoldersInFolder(item.Id, item.Name, outlineLevel + 1, ref list);
+            }
+        }
+
+        public override List<CloudFolder> CreateOutlineDirectoryList()
+        {
+            string rootFolder = getRootFolderId();
+            var list = new List<CloudFolder>();
+            ListSubfoldersInFolder(rootFolder, "All Folders", 0, ref list);
+            return list;
+        }
+
         public override bool TokenIsOk()
         {
             if (token.access_token == null)

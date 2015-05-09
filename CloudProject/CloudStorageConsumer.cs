@@ -116,6 +116,13 @@ namespace CloudStorage
 		public string email;
 	}
 
+    public class CloudFolder
+    {
+        public int OutlineLevel;
+        public string Name;
+        public string Id;
+    }
+
 	public abstract class CloudStorageConsumer
 	{
         public OAuthServiceConfig config = new OAuthServiceConfig();
@@ -126,6 +133,8 @@ namespace CloudStorage
         [Obsolete("It is best advised to retrieve files in a folder based manner, using ListFilesInFolder() in conjunction with GetRootFolderId()")]
         public abstract List<CloudItem> ListAllFiles(IEnumerable<string> fileExtensions);
         public abstract List<CloudItem> ListFilesInFolder(string folderId, IEnumerable<string> fileExtensions);
+        public abstract void ListSubfoldersInFolder(string folderId, string folderName, int outlineLevel, ref List<CloudFolder> list); // List<CloudFolder> ListSubfoldersInFolder(string folderId, int outlineLevel);
+	    public abstract List<CloudFolder> CreateOutlineDirectoryList();
 		public abstract bool TokenIsOk ();
 		public abstract string getRootFolderId ();
         /// <summary>

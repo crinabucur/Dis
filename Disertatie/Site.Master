@@ -48,6 +48,7 @@
             <asp:ScriptReference Path="~/Scripts/jquery.gridster.js" />
             <asp:ScriptReference Path="~/Scripts/jquery.gridster.extras.js" />
             <asp:ScriptReference Path="~/Scripts/jquery.collision.js" />
+            <asp:ScriptReference Path="~/Scripts/jquery.dynatree.js"/>
             <asp:ScriptReference Path="~/Scripts/utils.js" />
             <asp:ScriptReference Path="~/Scripts/dialogs.js"/>
             <asp:ScriptReference Path="~/Scripts/functions.js"/>

@@ -167,3 +167,91 @@ function InitializeDialogs() {
         cloudService = 'null';
     }
 }
+
+function MoveOrCopyDialog(cloud) {
+    PageMethods.GetDirectoryTree(cloud, function(response) {
+        if (response.Error) {
+            ShowError(response.ErrorMessage);
+            return;
+        }
+
+        var objectWidth = 520;
+        var objectHeight = 300;
+
+        var dialogPaddingWidth = 50;
+        var dialogPaddingHeight = 20;
+
+        var dialogWidth = objectWidth + dialogPaddingWidth;
+        var dialogHeight = objectHeight + dialogPaddingHeight;
+
+        var treeData = JSON && JSON.parse(response.TreeData) || $.parseJSON(response.TreeData);
+
+        CreateModalDialog(dialogHeight, dialogWidth, "Move / Copy Selected Item");
+
+        // Set the modal dialog content
+        $ModalDialogContent.append("<div style='text-align:left;'><br/><div>" + "Move / Copy the selected item to this folder:" + "</div><div id='tree3' style='max-height:250px; overflow:auto;'></div></div>");
+
+        $("#tree3").dynatree({
+            minExpandLevel: 2,
+            //checkbox: true,
+            selectMode: 1,
+            children: treeData,
+            onSelect: function (select, node) {
+                // Display list of selected nodes
+                var selNodes = node.tree.getSelectedNodes();
+                // convert to title/key array
+                var selKeys = $.map(selNodes, function (node) {
+                    return "[" + node.data.key + "]: '" + node.data.title + "'";
+                });
+                $("#echoSelection2").text(selKeys.join(", "));
+            },
+            onClick: function (node, event) {
+                // We should not toggle, if target was "checkbox", because this
+                // would result in double-toggle (i.e. no toggle)
+                //if (node.getEventTargetType(event) == "title")
+                //    node.toggleSelect();
+            },
+            onKeydown: function (node, event) {
+                if (event.which == 32) {
+                    node.toggleSelect();
+                    return false;
+                }
+            }
+        });
+
+        // expand the root node by default
+        //$("#tree3").dynatree("getRoot").visit(function (node) {
+        //    node.expand(true);
+        //});
+
+        //  Set dialog buttons and actions.
+        SetModalDialogOption("buttons", [
+            {
+                text: "Cancel",
+                click: function () {
+                    // Dismiss the modal dialog.
+                    CloseModalDialog();
+                }
+            },
+            {
+                text: "Ok",
+                click: function () {
+                    //var selectedIDs = "";
+                    //$.each($("#tree3").dynatree("getSelectedNodes"), function (i, l) {
+                    //    if (typeof (l.data.key) != "undefined") {
+                    //        selectedIDs = selectedIDs + "#" + l.data.key.toString();
+                    //    }
+                    //});
+                    //PageMethods.AddSelectedTasksToTimeline(selectedIDs, function () {
+                    //    // Dismiss the modal dialog.
+                    //    CloseModalDialog();
+                    //    RefreshView();
+                    //});
+                }
+            }
+        ]);
+
+        // The dialog is set up. Time to present the dialog.
+        ShowModalDialog(dialogHeight, dialogWidth);
+    });
+}

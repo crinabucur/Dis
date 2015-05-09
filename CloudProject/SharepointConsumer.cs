@@ -131,6 +131,19 @@ namespace CloudStorage
             return ret;
         }
 
+        public override void ListSubfoldersInFolder(string folderId, string folderName, int outlineLevel, ref List<CloudFolder> list)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override List<CloudFolder> CreateOutlineDirectoryList()
+        {
+            string rootFolder = getRootFolderId();
+            var list = new List<CloudFolder>();
+            ListSubfoldersInFolder(rootFolder, "All Folders", 0, ref list);
+            return list;
+        }
+
         public override bool TokenIsOk()
         {
             if (FedAuth == null) //  || rtFa == null // rtFa cookie is not mandatory
