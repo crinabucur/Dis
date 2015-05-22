@@ -32,7 +32,7 @@ namespace Disertatie.AJAX
                 // create default layout
                 GridCells = new List<GridCellLayoutData>();
 
-                for (int i = 0; i < 6; i++)
+                for (int i = 0; i < 7; i++) // 6
                 {
                     int row = (i < 3) ? 1 : 3;
                     int col = (i * 2) % 6 + 1;
@@ -72,6 +72,7 @@ namespace Disertatie.AJAX
         SharePoint,
         Dropbox,
         Box,
-        Device
+        Device,
+        AmazonS3
     }
 }

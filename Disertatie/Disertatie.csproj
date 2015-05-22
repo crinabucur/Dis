@@ -52,6 +52,9 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\AspNet.ScriptManager.jQuery.UI.Combined.1.9.0\lib\net45\AspNet.ScriptManager.jQuery.UI.Combined.dll</HintPath>
     </Reference>
+    <Reference Include="AWSSDK">
+      <HintPath>..\packages\AWSSDK.2.3.37.0\lib\net45\AWSSDK.dll</HintPath>
+    </Reference>
     <Reference Include="Backload, Version=1.9.3.1, Culture=neutral, PublicKeyToken=02eaf42ab375d363, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Backload.1.9.3.1\lib\net45\Backload.dll</HintPath>
@@ -315,6 +318,7 @@
     <Content Include="Content\jquery.gridster.css" />
     <Content Include="Content\Site.css" />
     <Content Include="Content\themes\base\images\bg-noise.jpg" />
+    <Content Include="Images\AmazonS3.png" />
     <Content Include="Images\dynatree_icons.gif" />
     <Content Include="Content\themes\base\images\page-bkg.jpg" />
     <Content Include="Content\themes\base\images\ui-bg_flat_0_aaaaaa_40x100.png" />
@@ -972,6 +976,7 @@
     <Compile Include="Site.Mobile.Master.designer.cs">
       <DependentUpon>Site.Mobile.Master</DependentUpon>
     </Compile>
+    <Compile Include="Utils\AmazonS3Consumer.cs" />
     <Compile Include="Utils\MsOnlineClaimsHelper.cs" />
     <Compile Include="Utils\SharepointOnline.cs" />
     <Compile Include="Utils\WcfClientContracts.cs" />

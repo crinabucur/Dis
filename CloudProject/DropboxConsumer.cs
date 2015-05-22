@@ -2,12 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Text;
-using CloudStorage;
+using CloudProject;
 using Newtonsoft.Json.Linq;
 using System.IO;
-using CloudStorage_extensions;
+using CloudProject_extensions;
 
-namespace CloudStorage
+namespace CloudProject
 {
     public class DropboxConsumer : CloudStorageConsumer
     {
@@ -87,8 +87,8 @@ namespace CloudStorage
             actualFileId = item.Id;
             return new CloudFileData()
             {
-                fileStream = GetDocument(item.Id),
-                cloudItem = GetFileMetadata(actualFileId) // get file metadata using the actual path to the file, not the initial one
+                FileStream = GetDocument(item.Id),
+                CloudItem = GetFileMetadata(actualFileId) // get file metadata using the actual path to the file, not the initial one
             };
         }
 
@@ -274,7 +274,7 @@ namespace CloudStorage
                 lastEdited = obj["modified"].ToString()
             };
 
-            item.setImageUrl();
+            item.SetImageUrl();
             return item;
         }
 
@@ -323,7 +323,7 @@ namespace CloudStorage
 
         public List<string> GetFileRevisions(string path)
         {
-            //radsimu - to detect if a file is shared between two users is to search through its rev codes. A file has more rev codes (each corresponding to a revision). So when opening a dropbox file must check all its rev codes with the codes saved in FileLocation.cloudFilesAlreadyOpened (in this dictionary a Dropbox file is identified by its latest rev code at the time it was opened - but it might have been modified meanwhile)
+            //to detect if a file is shared between two users is to search through its rev codes. A file has more rev codes (each corresponding to a revision). So when opening a dropbox file must check all its rev codes with the codes saved in FileLocation.cloudFilesAlreadyOpened (in this dictionary a Dropbox file is identified by its latest rev code at the time it was opened - but it might have been modified meanwhile)
             List<string> ret = new List<string>();
             HttpWebRequest request = (HttpWebRequest)WebRequest.Create("https://api.dropbox.com/1/revisions/dropbox" + path);
             request.Headers["Authorization"] = "Bearer " + token.access_token;

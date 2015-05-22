@@ -8,44 +8,27 @@
     <ProjectGuid>{576F799F-CF8D-4923-9172-8C4926C0D8F4}</ProjectGuid>
     <ProjectTypeGuids>{786C830F-07A1-408B-BD7F-6EE04809D6DB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <OutputType>Library</OutputType>
-    <RootNamespace>CloudStorage</RootNamespace>
-    <AssemblyName>CloudStorage</AssemblyName>
+    <RootNamespace>CloudProject</RootNamespace>
+    <AssemblyName>CloudProject</AssemblyName>
     <TargetFrameworkProfile>Profile328</TargetFrameworkProfile>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <MinimumVisualStudioVersion>10.0</MinimumVisualStudioVersion>
     <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\</SolutionDir>
     <RestorePackages>true</RestorePackages>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'ProjectPlan365|iPhoneSimulator' ">
-    <Optimize>false</Optimize>
-    <OutputPath>bin\iPhoneSimulator\ProjectPlan365</OutputPath>
-    <WarningLevel>4</WarningLevel>
-    <DebugSymbols>true</DebugSymbols>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'ProjectPlan365|iPhone' ">
-    <Optimize>false</Optimize>
-    <OutputPath>bin\iPhone\ProjectPlan365</OutputPath>
-    <WarningLevel>4</WarningLevel>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'ProjectViewer365|iPhoneSimulator' ">
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'CloudProject|iPhoneSimulator' ">
     <Optimize>false</Optimize>
     <OutputPath>bin\iPhoneSimulator\ProjectViewer365</OutputPath>
     <WarningLevel>4</WarningLevel>
     <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'ProjectViewer365|iPhone' ">
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'CloudProject|iPhone' ">
     <Optimize>false</Optimize>
     <OutputPath>bin\iPhone\ProjectViewer365</OutputPath>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'ProjectPlan365|AnyCPU'">
-    <OutputPath>bin\ProjectPlan365\</OutputPath>
-    <DebugSymbols>true</DebugSymbols>
-    <WarningLevel>4</WarningLevel>
-    <Optimize>false</Optimize>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'ProjectViewer365|AnyCPU'">
-    <OutputPath>bin\ProjectViewer365\</OutputPath>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'CloudProject|AnyCPU' ">
+    <OutputPath>bin\CloudProject\</OutputPath>
     <DebugSymbols>true</DebugSymbols>
     <WarningLevel>4</WarningLevel>
     <Optimize>true</Optimize>

@@ -4,7 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Web;
 using System.Web.SessionState;
-using CloudStorage;
+using CloudProject;
 
 namespace Disertatie.Handlers
 {
@@ -22,7 +22,7 @@ namespace Disertatie.Handlers
             CloudStorageConsumer cloudConsumer = HttpContext.Current.Session[cloud.ToLower() + "Consumer"] as CloudStorageConsumer;
             CloudItem metadata = cloudConsumer.GetFileMetadata(fileId);
             CloudFileData cfd = cloudConsumer.GetDocument(metadata);
-            Stream fileStream = cfd.fileStream;
+            Stream fileStream = cfd.FileStream;
             MemoryStream memStream = new MemoryStream();
             fileStream.CopyTo(memStream);
 
@@ -30,7 +30,7 @@ namespace Disertatie.Handlers
             context.Response.ClearContent();
             context.Response.Clear();
             context.Response.ContentType = "application/octet-stream";
-            context.Response.AddHeader("Content-Disposition", "attachment; filename=\"" + cfd.cloudItem.Name + "\";");
+            context.Response.AddHeader("Content-Disposition", "attachment; filename=\"" + cfd.CloudItem.Name + "\";");
 
             context.Response.AddHeader("Content-Length", memStream.Length.ToString());
             memStream.WriteTo(context.Response.OutputStream);

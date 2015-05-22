@@ -5,10 +5,10 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using Newtonsoft.Json.Linq;
 using System.Collections.Generic;
-using CloudStorage_extensions;
+using CloudProject_extensions;
 using System.Text;
 
-namespace CloudStorage
+namespace CloudProject
 {
     public class BoxConsumer : CloudStorageConsumer
     {
@@ -50,15 +50,17 @@ namespace CloudStorage
             int foldersCount = 0;
             foreach (JObject val in jobj["entries"])
             {
-                CloudItem item = new CloudItem();
-                item.Id = val["id"].ToString();
-                item.Name = val["name"].ToString();
-                item.isFolder = val["type"].ToString() == "folder";
-                item.lastEditor = val["modified_by"].ToString();
-                item.lastEdited = val["modified_at"].ToString();
-                item.fileVersion = val["modified_at"].ToString();
-                item.cloudConsumer = this.name;
-                item.setImageUrl();
+                var item = new CloudItem
+                {
+                    Id = val["id"].ToString(),
+                    Name = val["name"].ToString(),
+                    isFolder = val["type"].ToString() == "folder",
+                    lastEditor = val["modified_by"].ToString(),
+                    lastEdited = val["modified_at"].ToString(),
+                    fileVersion = val["modified_at"].ToString(),
+                    cloudConsumer = this.name
+                };
+                item.SetImageUrl();
                 if (item.isFolder)
                 {//make sure folders are on top
                     ret.Insert(foldersCount, item);
@@ -223,7 +225,7 @@ namespace CloudStorage
             userData = new UserData()
             {
                 Name = retVal["name"].ToString(),
-                email = retVal["login"].ToString()
+                Email = retVal["login"].ToString()
             };
             return userData;
         }
@@ -283,6 +285,7 @@ namespace CloudStorage
             };
         }
 
+        [Obsolete("It is best advised to retrieve files in a folder based manner, using ListFilesInFolder() in conjunction with GetRootFolderId()")]
         public override List<CloudItem> ListAllFiles(IEnumerable<string> fileExtensions)
         {
             //TODO this is hardcoded for *.mp* and *.xml file names only
@@ -415,6 +418,39 @@ namespace CloudStorage
                 request.Abort();
             }
             return false;
+        }
+
+        public bool MoveFilesAndFolders(List<string> ids, string newParentId)
+        {
+            HttpWebRequest request;
+            HttpWebResponse response;
+
+            try
+            {
+                foreach (var id in ids)
+                {
+                    request = (HttpWebRequest) WebRequest.Create("https://api.box.com/2.0/files/" + id); // TODO: folders case
+                    request.Headers["Authorization"] = "Bearer " + token.access_token;
+                    request.Method = "PUT";
+
+                    string metaData = "{";
+                    metaData += "\"parent\": {\"id\":\"" + newParentId + "\"}}";
+                    byte[] bytes = System.Text.UTF8Encoding.UTF8.GetBytes(metaData);
+                    using (var reqStream = request.GetRequestStream())
+                    {
+                        reqStream.Write(bytes, 0, bytes.Length);
+                    }
+
+                    response = (HttpWebResponse) request.GetResponse();
+                    if (response.StatusCode != HttpStatusCode.OK)
+                        return false;
+                }
+                return true;
+            }
+            catch(Exception e)
+            {
+                return false; // TODO: manage exception
+            }
         }
 
         public void AddComment(string fileId, string comment)

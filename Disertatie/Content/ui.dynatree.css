@@ -228,7 +228,7 @@ span.dynatree-icon /* Default icon */
 {
 	margin-left: 3px;
 	background-position: 0px 0px;
-    width: 0px !important; /* CCB */
+    /*width: 0px !important; /* CCB */
 }
 
 .dynatree-ico-cf span.dynatree-icon  /* Collapsed Folder */

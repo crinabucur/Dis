@@ -5,9 +5,9 @@ using System.Collections;
 using System.IO;
 using System.Net;
 using Newtonsoft.Json.Linq;
-using CloudStorage_extensions;
+using CloudProject_extensions;
 
-namespace CloudStorage
+namespace CloudProject
 {
     public class GoogleDriveConsumer : CloudStorageConsumer
     {
@@ -32,14 +32,16 @@ namespace CloudStorage
             int foldersCount = 0;
             foreach (JObject val in jobj["items"])
             {
-                CloudItem item = new CloudItem();
-                item.Id = val["id"].ToString();
-                item.Name = val["title"].ToString();
-                item.isFolder = val["mimeType"].ToString().EndsWith(".folder");
-                item.cloudConsumer = this.name;
-                item.fileVersion = val["modifiedDate"].ToString();
-                item.lastEdited = val["modifiedDate"].ToString();
-                item.setImageUrl();
+                var item = new CloudItem
+                {
+                    Id = val["id"].ToString(),
+                    Name = val["title"].ToString(),
+                    isFolder = val["mimeType"].ToString().EndsWith(".folder"),
+                    cloudConsumer = this.name,
+                    fileVersion = val["modifiedDate"].ToString(),
+                    lastEdited = val["modifiedDate"].ToString()
+                };
+                item.SetImageUrl();
                 if (item.isFolder)
                 {//make sure folders are on top
                     ret.Insert(foldersCount, item);
@@ -261,6 +263,7 @@ namespace CloudStorage
             return userData;
         }
 
+        [Obsolete("It is best advised to retrieve files in a folder based manner, using ListFilesInFolder() in conjunction with GetRootFolderId()")]
         public override List<CloudItem> ListAllFiles(IEnumerable<string> fileExtensions)
         {
             var ret = new List<CloudItem>();

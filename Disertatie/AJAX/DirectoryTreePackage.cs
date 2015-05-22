@@ -2,7 +2,7 @@
 using System.Windows.Forms;
 using System.Text;
 using System.Web;
-using CloudStorage;
+using CloudProject;
 
 namespace Disertatie.AJAX
 {
@@ -97,6 +97,10 @@ namespace Disertatie.AJAX
 
             _sb.Append(",");
             _sb.Append("\"expanded\": ");
+            _sb.Append("true");
+
+            _sb.Append(",");
+            _sb.Append("\"isFolder\": ");
             _sb.Append("true");
 
             if (treeNode.Nodes.Count > 0)

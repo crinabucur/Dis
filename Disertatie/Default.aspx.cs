@@ -5,20 +5,23 @@ using System.Diagnostics.Eventing.Reader;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Text;
 using System.Web;
 using System.Web.Http;
 using System.Web.Services;
 using System.Web.UI;
 using System.Web.UI.WebControls;
-using CloudStorage;
+using CloudProject;
 using Disertatie.AJAX;
 using Disertatie.Utils;
+using Newtonsoft.Json.Linq;
 
 namespace Disertatie
 {
     public partial class Default : Page
     {
         #region Declarations
+        private static string _amazonRedirectUri = "";
         #endregion
 
         protected void Page_Load(object sender, EventArgs e)
@@ -42,6 +45,32 @@ namespace Disertatie
                 }
             }
             #endregion
+            #region Amazon S3 integration
+            else if (_amazonRedirectUri != "" && Request["code"] != null && Request["code"] != "")
+            {
+                // this must be an Amazon code
+                var consumer = ((AmazonS3Consumer) HttpContext.Current.Session["amazons3Consumer"]);
+
+                HttpWebRequest request = (HttpWebRequest)WebRequest.Create(consumer.config.tokenUri);
+                request.Method = "POST";
+                request.ContentType = "application/x-www-form-urlencoded;charset=UTF-8";
+                string metaData = "grant_type=authorization_code&code=" + Request["code"] + "&client_id=" + consumer.config.appKey + "&client_secret=" + consumer.config.appSecret + "&redirect_uri=" + _amazonRedirectUri;
+                byte[] bytes = Encoding.UTF8.GetBytes(metaData);
+                using (var reqStream = request.GetRequestStream())
+                {
+                    reqStream.Write(bytes, 0, bytes.Length);
+                }
+                var response = request.GetResponse();
+                var obj = JObject.Parse(new StreamReader(response.GetResponseStream()).ReadToEnd());
+                consumer.token = new OAuthToken
+                {
+                    access_token = obj["access_token"].ToString(),
+                    refresh_token = obj["refresh_token"].ToString()
+                };
+                _amazonRedirectUri = "";
+                request.Abort();
+            }
+            #endregion
         }
 
         #region Clouds integration
@@ -52,6 +81,7 @@ namespace Disertatie
             if (cloud.ToLower() == "sharepoint")
                 return IsAuthSharepoint() == "true";
             if (cloud == "Device") return true;
+
             return (HttpContext.Current.Session[cloud.ToLower() + "Consumer"] as CloudStorageConsumer).TokenIsOk();
         }
 
@@ -111,6 +141,13 @@ namespace Disertatie
             catch { Debug.WriteLine("Error in getting the wreply parameter for Office365 authentication!"); }
 
             return wreply;
+        }
+
+        [WebMethod]
+        public static string GetAmazonAuthenticationUrl(string currentLocation)
+        {
+            _amazonRedirectUri = currentLocation;
+            return "https://www.amazon.com/ap/oa?client_id=" + ((AmazonS3Consumer)HttpContext.Current.Session["amazons3Consumer"]).config.appKey + "&redirect_uri=" + currentLocation + "&scope=profile&response_type=code";
         }
         #endregion Clouds authentication
 
@@ -172,6 +209,15 @@ namespace Disertatie
         {
             CloudStorageConsumer cloudConsumer = HttpContext.Current.Session[cloud.ToLower() + "Consumer"] as CloudStorageConsumer;
             return new DirectoryTreePackage(cloudConsumer);
+        }
+
+        [WebMethod]
+        public static bool MoveFilesAndFolders(List<string> ids, string newParentId, string cloud)
+        {
+            if (cloud.ToLower() != "box") return false; // TODO: remove
+
+            BoxConsumer consumer = HttpContext.Current.Session[cloud.ToLower() + "Consumer"] as BoxConsumer;
+            return consumer.MoveFilesAndFolders(ids, newParentId);
         }
         #endregion Clouds integration
 

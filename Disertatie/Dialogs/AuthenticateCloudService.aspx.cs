@@ -1,5 +1,5 @@
 ﻿using System;
-using CloudStorage;
+using CloudProject;
 using DotNetOpenAuth.Messaging;
 using DotNetOpenAuth.OAuth2;
 
@@ -32,6 +32,7 @@ namespace Disertatie.Dialogs
 
                     wsClient.ClientCredentialApplicator = ClientCredentialApplicator.PostParameter(cloudConsumer.config.appSecret);
                     IAuthorizationState accessTokenResponse = null;
+                    
                     accessTokenResponse = wsClient.ProcessUserAuthorization();
 
                     if (accessTokenResponse == null)

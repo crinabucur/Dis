@@ -4,9 +4,10 @@ C:\Users\Crina\Documents\Visual Studio 2013\Projects\Disertatie\Disertatie\bin\D
 C:\Users\Crina\Documents\Visual Studio 2013\Projects\Disertatie\Disertatie\bin\Antlr3.Runtime.dll
 C:\Users\Crina\Documents\Visual Studio 2013\Projects\Disertatie\Disertatie\bin\AspNet.ScriptManager.jQuery.dll
 C:\Users\Crina\Documents\Visual Studio 2013\Projects\Disertatie\Disertatie\bin\AspNet.ScriptManager.jQuery.UI.Combined.dll
+C:\Users\Crina\Documents\Visual Studio 2013\Projects\Disertatie\Disertatie\bin\AWSSDK.dll
 C:\Users\Crina\Documents\Visual Studio 2013\Projects\Disertatie\Disertatie\bin\Backload.Contracts.dll
 C:\Users\Crina\Documents\Visual Studio 2013\Projects\Disertatie\Disertatie\bin\Backload.dll
-C:\Users\Crina\Documents\Visual Studio 2013\Projects\Disertatie\Disertatie\bin\CloudStorage.dll
+C:\Users\Crina\Documents\Visual Studio 2013\Projects\Disertatie\Disertatie\bin\CloudProject.dll
 C:\Users\Crina\Documents\Visual Studio 2013\Projects\Disertatie\Disertatie\bin\DotNetOpenAuth.AspNet.dll
 C:\Users\Crina\Documents\Visual Studio 2013\Projects\Disertatie\Disertatie\bin\DotNetOpenAuth.Core.dll
 C:\Users\Crina\Documents\Visual Studio 2013\Projects\Disertatie\Disertatie\bin\DotNetOpenAuth.Core.UI.dll
@@ -48,7 +49,8 @@ C:\Users\Crina\Documents\Visual Studio 2013\Projects\Disertatie\Disertatie\bin\W
 C:\Users\Crina\Documents\Visual Studio 2013\Projects\Disertatie\Disertatie\bin\WebGrease.dll
 C:\Users\Crina\Documents\Visual Studio 2013\Projects\Disertatie\Disertatie\bin\Org.Mentalis.Security.Cryptography.dll
 C:\Users\Crina\Documents\Visual Studio 2013\Projects\Disertatie\Disertatie\bin\Mono.Math.dll
-C:\Users\Crina\Documents\Visual Studio 2013\Projects\Disertatie\Disertatie\bin\CloudStorage.pdb
+C:\Users\Crina\Documents\Visual Studio 2013\Projects\Disertatie\Disertatie\bin\CloudProject.pdb
+C:\Users\Crina\Documents\Visual Studio 2013\Projects\Disertatie\Disertatie\bin\AWSSDK.pdb
 C:\Users\Crina\Documents\Visual Studio 2013\Projects\Disertatie\Disertatie\bin\DotNetOpenAuth.AspNet.xml
 C:\Users\Crina\Documents\Visual Studio 2013\Projects\Disertatie\Disertatie\bin\DotNetOpenAuth.Core.xml
 C:\Users\Crina\Documents\Visual Studio 2013\Projects\Disertatie\Disertatie\bin\DotNetOpenAuth.Core.UI.xml

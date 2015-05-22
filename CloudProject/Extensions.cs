@@ -4,7 +4,7 @@ using System.Threading;
 using System.IO;
 using System.Reflection;
 
-namespace CloudStorage_extensions
+namespace CloudProject_extensions
 {
 	public static class ExtensionMethods
 	{

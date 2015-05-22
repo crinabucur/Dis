@@ -9,9 +9,9 @@ using System.Net;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Xml;
-using CloudStorage_extensions;
+using CloudProject_extensions;
 
-namespace CloudStorage
+namespace CloudProject
 {
     public class BasecampConsumer : CloudStorageConsumer
     {
@@ -165,7 +165,7 @@ namespace CloudStorage
                 var retVal = JObject.Parse(new StreamReader(request.GetResponse().GetResponseStream()).ReadToEnd());
                 userData = new UserData()
                 {
-                    email = retVal["identity"]["email_address"].ToString(),
+                    Email = retVal["identity"]["email_address"].ToString(),
                     Name = retVal["identity"]["first_name"].ToString() + " " + retVal["identity"]["last_name"].ToString()
                 };
                 accountId = (retVal["accounts"] as JArray)[0]["id"].ToString();

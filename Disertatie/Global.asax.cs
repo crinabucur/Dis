@@ -6,8 +6,9 @@ using System.Web;
 using System.Web.Optimization;
 using System.Web.Routing;
 using System.Web.Security;
-using CloudStorage;
+using CloudProject;
 using Disertatie;
+using Disertatie.Utils;
 
 namespace Disertatie
 {
@@ -82,6 +83,15 @@ namespace Disertatie
             basecamp.config.authorizeUri = "https://launchpad.37signals.com/authorization/new?type=web_server";
             basecamp.config.tokenUri = "https://launchpad.37signals.com/authorization/token?type=web_server";
             Session["basecampConsumer"] = basecamp;
+
+            // AmazonS3
+            AmazonS3Consumer amazons3 = new AmazonS3Consumer();
+            amazons3.config.appKey = ConfigurationManager.AppSettings["AmazonS3ClientId"];
+            amazons3.config.appSecret = ConfigurationManager.AppSettings["AmazonS3ClientSecret"];
+            amazons3.config.authorizeUri = "https://www.amazon.com/ap/oa";
+            amazons3.config.tokenUri = "https://api.amazon.com/auth/o2/token"; //???????
+            amazons3.config.scope = "profile";
+            Session["amazons3Consumer"] = amazons3;
 
             //set the onedrive key and secret based on the current deploy domain - onedrive doesn't allow more than one redirect uri per app (key-secret pair)
             //string domain = HttpContext.Current.Request.Url.Authority;

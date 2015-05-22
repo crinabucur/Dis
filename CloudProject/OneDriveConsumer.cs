@@ -5,9 +5,9 @@ using System.Collections;
 using System.IO;
 using System.Net;
 using Newtonsoft.Json.Linq;
-using CloudStorage_extensions;
+using CloudProject_extensions;
 
-namespace CloudStorage
+namespace CloudProject
 {
     public class OneDriveConsumer : CloudStorageConsumer
     {
@@ -28,7 +28,7 @@ namespace CloudStorage
             foreach (JObject val in jobj["data"])
             {
                 CloudItem item = parseMetadataJObject(val);
-                item.setImageUrl();
+                item.SetImageUrl();
                 if (item.isFolder)
                 {//make sure folders are on top
                     ret.Insert(foldersCount, item);
@@ -204,9 +204,9 @@ namespace CloudStorage
         {
             //TODO include shared folder in the search
             var ret = new List<CloudItem>();
-            // OMC 01.27.2014 - add shared folder
+            // add shared folder
             string URL = "https://apis.live.net/v5.0/me/skydrive/search?q=.&access_token=" + token.access_token;
-            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(URL);//radsimu TODO this is limited to 100 files per page - must check pagination and make subsequent api calls if necessary
+            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(URL);// TODO this is limited to 100 files per page - must check pagination and make subsequent api calls if necessary
             request.Method = "GET";
             HttpWebResponse response = (HttpWebResponse)request.GetResponse();
             string body = new StreamReader(response.GetResponseStream()).ReadToEnd();
@@ -215,7 +215,7 @@ namespace CloudStorage
 
             var entries = (JArray)retVal["data"];
             foreach (JObject file in entries)
-                if (file["id"].ToString().StartsWith("file."))//radsimu check if it's a folder
+                if (file["id"].ToString().StartsWith("file."))// check if it's a folder
                     foreach (string ext in fileExtensions)
                         if (file["name"].ToString().ToLower().EndsWith(ext.ToLower()))
                         {

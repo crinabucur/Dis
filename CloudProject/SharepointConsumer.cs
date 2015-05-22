@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Net;
-using CloudStorage_extensions;
+using CloudProject_extensions;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using System.IO;
@@ -12,7 +12,7 @@ using System.ServiceModel;
 using System.Text.RegularExpressions;
 using System.Threading;
 
-namespace CloudStorage
+namespace CloudProject
 {
     public class SharepointConsumer : CloudStorageConsumer
     {
@@ -88,7 +88,7 @@ namespace CloudStorage
                         Name = (folder["Name"] != null) ? folder["Name"].ToString() : ((folder["Title"] != null) ? folder["Title"].ToString() : ""),
                         Id = folder["__metadata"]["uri"] + "/RootFolder/Files"
                     };
-                    item.setImageUrl();
+                    item.SetImageUrl();
                     ret.Add(item);
                 }
                 else
@@ -108,7 +108,7 @@ namespace CloudStorage
                                     lastEditor = (folder["LastModifiedBy"] != null && folder["LastModifiedBy"]["Name"] != null) ? folder["LastModifiedBy"]["Name"].ToString() : "",
                                     FullPath = config.authorizeUri + folder["ServerRelativeUrl"]
                                 };
-                                item.setImageUrl();
+                                item.SetImageUrl();
                                 ret.Add(item);
                                 break;
                             }
@@ -122,7 +122,7 @@ namespace CloudStorage
                             Name = (folder["Name"] != null) ? folder["Name"].ToString() : "",
                             Id = folder["__metadata"]["uri"] + "/files"
                         };
-                        item.setImageUrl();
+                        item.SetImageUrl();
                         ret.Add(item);
                     }
                 }
@@ -336,7 +336,7 @@ namespace CloudStorage
             userData = new UserData()
             {
                 Name = metadata["d"]["DisplayName"].ToString(),
-                email = metadata["d"]["Email"].ToString()
+                Email = metadata["d"]["Email"].ToString()
             };
             return userData;
         }

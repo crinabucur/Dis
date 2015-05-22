@@ -101,7 +101,13 @@ function CreateModalDialog(dialogHeight, dialogWidth, dialogTitle) {
         hide: "",
         closeOnEscape: true,
         buttons: "",
-        position: ['middle', 50],
+        //position: ['middle', 50],
+        position:
+            {
+                my: "center",
+                at: "center",
+                of: window
+            },
         close: function (event, ui) {
             // set the content of the dialog to an empty div
             $ModalDialog.html('<div id="' + ModalDialogContentID + '" class="ui-widget-content"/>');
@@ -141,7 +147,7 @@ function ShowModalDialog(dialogHeight, dialogWidth) {
 *   closes an open modal dialog
 */
 function CloseModalDialog() {
-    if (typeof $ModalDialog != 'undefined' && $ModalDialog.is(':data(dialog)'))
+    if (typeof $ModalDialog != 'undefined') // && $ModalDialog.is(':data(dialog)'))
         // close the dialog
         $ModalDialog.dialog("close");
 }
@@ -168,7 +174,12 @@ function InitializeDialogs() {
     }
 }
 
-function MoveOrCopyDialog(cloud) {
+function MoveOrCopyDialog(callingItem) {
+    var cell = callingItem.parent().parent().parent();
+    var icon = cell.find("img");
+    var fileId = icon.attr("fileid");
+    var cloud = icon.attr("cloud");
+
     PageMethods.GetDirectoryTree(cloud, function(response) {
         if (response.Error) {
             ShowError(response.ErrorMessage);
@@ -198,12 +209,12 @@ function MoveOrCopyDialog(cloud) {
             children: treeData,
             onSelect: function (select, node) {
                 // Display list of selected nodes
-                var selNodes = node.tree.getSelectedNodes();
-                // convert to title/key array
-                var selKeys = $.map(selNodes, function (node) {
-                    return "[" + node.data.key + "]: '" + node.data.title + "'";
-                });
-                $("#echoSelection2").text(selKeys.join(", "));
+                //var selNodes = node.tree.getSelectedNodes();
+                //// convert to title/key array
+                //var selKeys = $.map(selNodes, function (node) {
+                //    return "[" + node.data.key + "]: '" + node.data.title + "'";
+                //});
+                //$("#echoSelection2").text(selKeys.join(", "));
             },
             onClick: function (node, event) {
                 // We should not toggle, if target was "checkbox", because this
@@ -216,7 +227,9 @@ function MoveOrCopyDialog(cloud) {
                     node.toggleSelect();
                     return false;
                 }
-            }
+            },
+            clickFolderMode: 1, // activate
+            debugLevel: 0 // quiet
         });
 
         // expand the root node by default
@@ -227,26 +240,27 @@ function MoveOrCopyDialog(cloud) {
         //  Set dialog buttons and actions.
         SetModalDialogOption("buttons", [
             {
+                text: "Move",
+                click: function () {
+                    PageMethods.MoveFilesAndFolders([fileId], $("#tree3").dynatree("getActiveNode").data.key, cloud, function (resp) {  /// List<string> ids, string newParentId, string cloud //TODO: error if no node selected
+                        CloseModalDialog();
+                        var cloudContainer = $("#gridCell" + cloud);
+                        var currentFolder = cloudContainer.attr("currentfolder");
+                        ListContents(cloud, currentFolder);
+                    });
+                }
+            },
+            {
+                text: "Copy",
+                click: function () {
+                    // TODO: add
+                }
+            },
+            {
                 text: "Cancel",
                 click: function () {
                     // Dismiss the modal dialog.
                     CloseModalDialog();
-                }
-            },
-            {
-                text: "Ok",
-                click: function () {
-                    //var selectedIDs = "";
-                    //$.each($("#tree3").dynatree("getSelectedNodes"), function (i, l) {
-                    //    if (typeof (l.data.key) != "undefined") {
-                    //        selectedIDs = selectedIDs + "#" + l.data.key.toString();
-                    //    }
-                    //});
-                    //PageMethods.AddSelectedTasksToTimeline(selectedIDs, function () {
-                    //    // Dismiss the modal dialog.
-                    //    CloseModalDialog();
-                    //    RefreshView();
-                    //});
                 }
             }
         ]);

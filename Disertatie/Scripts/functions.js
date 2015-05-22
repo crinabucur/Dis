@@ -52,6 +52,7 @@
 //});
 
 var viewAsList = false;
+//var FoldersBreadcrumbs = new Array(6); // TODO fix ".." issue
 
 $(function initialize() {
     //  initialize the global variables used for dialog windows
@@ -74,8 +75,12 @@ $(document).ready(function () {
                         AuthenticateSharepointDialog("open", function () {
                             //OpenFromCloud(site); //what to do after logon
                         });
-                    }
-                    else {
+                    } else if (cloud.toLowerCase() == "amazons3") {
+                        var currentUrl = window.location.protocol + '//' + window.location.host + window.location.pathname;
+                        PageMethods.GetAmazonAuthenticationUrl(currentUrl, function (resp) {
+                            window.location.href = resp;
+                        });
+                    } else {
                         //jQuery(window).unbind("beforeunload");
                         window.location.href = " Dialogs/AuthenticateCloudService.aspx?cloud=" + cloud + "&action=open";
                     }
@@ -83,9 +88,11 @@ $(document).ready(function () {
             });
         });
 
-        var clouds = ["GoogleDrive", "OneDrive", "Dropbox", "Box", "SharePoint"]; //, "Device"];
+        var clouds = ["GoogleDrive", "OneDrive", "Dropbox", "Box", "SharePoint", "AmazonS3"]; //, "Device"];
+
         //clouds.forEach(ListContents);
         for (var i = 0; i < clouds.length; i++) {
+            //FoldersBreadcrumbs[i] = new Array(); // TODO fix ".." issue
             ListContents(clouds[i], null);
         }
     }
@@ -115,7 +122,7 @@ function CloseContextualMenu(e) {
 }
 
 function SetLayoutCookie() {
-    var clouds = ["GoogleDrive", "OneDrive", "Dropbox", "Box", "SharePoint", "Device"];
+    var clouds = ["GoogleDrive", "OneDrive", "Dropbox", "Box", "SharePoint", "AmazonS3", "Device"];
     var updatedCells = new Array();
     clouds.forEach(function (value) {
         var cell = $("#gridCell" + value.toString());
@@ -232,9 +239,11 @@ function ListContents(value, folderId) {
                 "<div style='display:table-cell'><div style='position:relative'><div class='DropdownArrow' style='left:" + dropdownOffset + "px;' type='" + type + "' known='" + items[k].IsKnownType + "'></div></div></div>" +
                 "<div id='item" + k + value + "' cloud='" + value + "' style='text-align:center; max-width:" + (itemWidth - 1) + "px;'>";
             if (items[k].isFolder) {
-                cell += "<img fileId='" + id + "' class='FolderIcon' src='" + items[k].imageUrl + "' cloud='" + value + "' type='" + items[k].Type + "'/></div>";
+                cell += "<img fileId='" + id + "' class='FolderIcon' src='" + items[k].imageUrl + "' cloud='" + value + "' type='" + items[k].Type + "' " +
+                                                  "isBucket='" + items[k].isBucket + "'/></div>"; // bucket='" + items[k].bucketName + "'
             } else {
-                cell += "<img fileId='" + id + "' class='FileIcon' src='" + items[k].imageUrl + "' known='" + items[k].IsKnownType + "' cloud='" + value + "' type='" + items[k].Type + "'/></div>";
+                cell += "<img fileId='" + id + "' class='FileIcon' src='" + items[k].imageUrl + "' known='" + items[k].IsKnownType + "' cloud='" + value + "' type='" + items[k].Type + "' " +
+                                                  "isBucket='" + items[k].isBucket + "'/></div>"; // bucket='" + items[k].bucketName + "'
             }
 
             cell += "<div style='width:100%; max-width:" + (itemWidth - 1) + "px; height:40px; text-align:center; text-size:12px; overflow-x:hidden; overflow-y:hidden;' title='" + items[k].Name + "'>" +
@@ -418,7 +427,7 @@ function ShowContextualMenu(callingItem) {
         options = (callingItem.attr("known") == "true") ? "<li>Preview</li>" : "<li class='ui-state-disabled'>Preview</li>";
         options += "<li id='menuOptionDownloadFile'>Download</li>";
         options += "<li id='menuOptionShare'>Share</li>";
-        options += "<li>Move or Copy</li>";
+        options += "<li id='menuOptionMoveCopyFile'>Move or Copy</li>";
         options += "<li id='menuOptionDeleteFile'>Delete</li>"; 
     } else {
         options = "<li id='menuOptionOpenFolder'>Open</li>";
@@ -440,6 +449,12 @@ function ShowContextualMenu(callingItem) {
     $("#menuOptionShare").bind({
         click: function () {
             FileShare(callingItem);
+        }
+    });
+
+    $("#menuOptionMoveCopyFile").bind({
+        click: function () {
+            MoveOrCopyDialog(callingItem);
         }
     });
 

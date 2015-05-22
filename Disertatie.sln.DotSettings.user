@@ -1,4 +1,6 @@
 ﻿<wpf:ResourceDictionary xml:space="preserve" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:s="clr-namespace:System;assembly=mscorlib" xmlns:ss="urn:shemas-jetbrains-com:settings-storage-xaml" xmlns:wpf="http://schemas.microsoft.com/winfx/2006/xaml/presentation">
 	<s:String x:Key="/Default/Environment/AssemblyExplorer/XmlDocument/@EntryValue">&lt;AssemblyExplorer&gt;&#xD;
   &lt;Assembly Path="C:\Users\Crina\Documents\Visual Studio 2013\Projects\Disertatie\packages\Newtonsoft.Json.6.0.5\lib\portable-net40+sl5+wp80+win8+wpa81\Newtonsoft.Json.dll" /&gt;&#xD;
+  &lt;Assembly Path="C:\Users\Crina\Documents\Visual Studio 2013\Projects\Disertatie\CloudProject\bin\AWS SDK for .NET\AWSSDK.dll" /&gt;&#xD;
+  &lt;Assembly Path="C:\Users\Crina\Documents\Visual Studio 2013\Projects\Disertatie\packages\AWSSDK.2.3.37.0\lib\net45\AWSSDK.dll" /&gt;&#xD;
 &lt;/AssemblyExplorer&gt;</s:String></wpf:ResourceDictionary>

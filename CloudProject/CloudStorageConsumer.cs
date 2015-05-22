@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 
-namespace CloudStorage
+namespace CloudProject
 {
 	public struct OAuthServiceConfig
 	{
@@ -27,6 +27,8 @@ namespace CloudStorage
 		public string Id; //used with GetFileMetada and GetDocument
         public string UniqueId; //used for uniquely identifying this file across multiple users
 		public bool isFolder;
+	    public bool isBucket; //true for AmazonS3 only
+	    public String bucketName; // only used for AmazonS3
 		public String fileVersion; //used for identifying file version - can be a date string but not necessarily (Dropbox is different)
 		public String lastEditor; //user who last edited
         public String lastEdited; //date string of last update
@@ -34,13 +36,19 @@ namespace CloudStorage
 	    public bool IsKnownType = true;
 	    public string Type;
 
-	    public void setImageUrl()
+	    public void SetImageUrl()
 	    {
 	        if (isFolder)
             {
                 imageUrl = "Images/folderIcon_64x64.png";
                 return;
             }
+	        if (isBucket)
+	        {
+	            isFolder = true;
+                imageUrl = "Images/bucketIcon_64x64.png";
+	            return;
+	        }
 
 	        var extension = Name.Substring(Name.LastIndexOf(".") + 1).ToLower();
 	        switch (extension)
@@ -106,14 +114,14 @@ namespace CloudStorage
 	}
 
 	public class CloudFileData{
-		public CloudItem cloudItem;
-		public Stream fileStream;
+		public CloudItem CloudItem;
+		public Stream FileStream;
 	}
 
 	public class UserData{
         public string Id;
 		public string Name;
-		public string email;
+		public string Email;
 	}
 
     public class CloudFolder
@@ -162,8 +170,8 @@ namespace CloudStorage
         {
             return new CloudFileData()
             {
-                fileStream = GetDocument(item.Id),
-				cloudItem = GetFileMetadata(item.Id)
+                FileStream = GetDocument(item.Id),
+				CloudItem = GetFileMetadata(item.Id)
             };
         }
 
