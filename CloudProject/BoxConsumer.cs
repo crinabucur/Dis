@@ -163,54 +163,6 @@ namespace CloudProject
             return (retVal["size"] != null) ? (int)retVal["size"] : 0;
         }
 
-        public override CloudItem SaveOverwriteDocument(Stream content, String fileId, String contentType = null)
-        {
-			if (content.CanSeek)
-				content.Position = 0;
-            if (contentType == null)
-                contentType = "application/vnd.ms-project";
-
-            HttpWebRequest request = null;
-            HttpWebResponse response = null;
-
-            string url = "https://upload.box.com/api/2.0/files/" + fileId + "/content";
-
-            request = (HttpWebRequest)WebRequest.Create(url);
-            var boundary = "----WebKitFormBoundarySkAQdHysJKel8YBM";
-            request.ContentType = "multipart/form-data; boundary=" + boundary;
-            request.Method = "POST";
-            request.Headers["Authorization"] = "Bearer " + token.access_token;
-            //request.Headers["Accept-Encoding"] = "gzip, deflate";
-
-            //the file name is required by box            
-
-            //prepare a multipart post message content            
-            string requestContent = "--" + boundary + "\r\n" + "Content-Disposition: form-data;name=\"filename\"; filename=\"" + GetFileMetadata(fileId).Name + "\"\r\nContent-Type:" + contentType + "\r\n\r\n";
-
-            byte[] bytes = System.Text.UTF8Encoding.UTF8.GetBytes(requestContent);
-
-            using (var reqStream = request.GetRequestStream())
-            {
-                reqStream.Write(bytes, 0, bytes.Length);
-                content.CopyTo(reqStream);
-                bytes = System.Text.UTF8Encoding.UTF8.GetBytes("\r\n--" + boundary + "--\r\n");
-                reqStream.Write(bytes, 0, bytes.Length);
-            }
-            using (response = (HttpWebResponse)request.GetResponse())
-            {
-                if (response.StatusCode == HttpStatusCode.OK || response.StatusCode == HttpStatusCode.Created)
-                {
-                    JObject retVal = JObject.Parse(new StreamReader(response.GetResponseStream()).ReadToEnd());
-                    var file = retVal["entries"][0] as JObject;
-                    return parseMetadataJObject(file);
-                }
-                else
-                {
-                    throw new Exception("Failed to create the document");
-                }
-            }
-        }
-
         private UserData userData;
         public override UserData GetUser()
         {
@@ -285,55 +237,6 @@ namespace CloudProject
             };
         }
 
-        [Obsolete("It is best advised to retrieve files in a folder based manner, using ListFilesInFolder() in conjunction with GetRootFolderId()")]
-        public override List<CloudItem> ListAllFiles(IEnumerable<string> fileExtensions)
-        {
-            //TODO this is hardcoded for *.mp* and *.xml file names only
-            var ret = new List<CloudItem>();
-
-            HttpWebRequest request = (HttpWebRequest)WebRequest.Create("https://api.box.com/2.0/search?query=.mp");// file names. Also, this is limited to 60 files per page - must check pagination and make subsequent api calls if necessary
-            request.Headers["Authorization"] = "Bearer " + token.access_token;
-            //request.Headers["Accept-Encoding"] = "gzip, deflate";
-            request.Method = "GET";
-            request.Headers["Pragma"] = "no-cache";
-            HttpWebResponse response = (HttpWebResponse)request.GetResponse();
-            string body = new StreamReader(response.GetResponseStream()).ReadToEnd();
-            JObject retVal = JObject.Parse(body);
-
-            var entries = (JArray)retVal["entries"];
-            foreach (JObject file in entries)
-                if ((string)file["type"] == "file")
-                    foreach (string ext in fileExtensions)
-                        if (((string)file["name"]).ToLower().EndsWith(ext.ToLower()))
-                        {
-                            ret.Add(parseMetadataJObject(file));
-                            break;
-                        }
-
-            request = (HttpWebRequest)WebRequest.Create("https://api.box.com/2.0/search?query=.xml");//TODO this is limited to 60 files per page - must check pagination and make subsequent api calls if necessary
-            request.Headers["Authorization"] = "Bearer " + token.access_token;
-            //request.Headers["Accept-Encoding"] = "gzip, deflate";
-            request.Method = "GET";
-            request.Headers["Pragma"] = "no-cache";
-            response = (HttpWebResponse)request.GetResponse();
-            body = new StreamReader(response.GetResponseStream()).ReadToEnd();
-            retVal = JObject.Parse(body);
-
-            entries = (JArray)retVal["entries"];
-            foreach (JObject file in entries)
-            {
-                if (file["type"].ToString() == "file")
-                    foreach (string ext in fileExtensions)
-                        if ((file["name"].ToString()).ToLower().EndsWith(ext.ToLower()))
-                        {
-                            ret.Add(parseMetadataJObject(file));
-                            break;
-                        }
-            }
-
-            return ret;
-        }
-
         public override CloudItem SaveCreateDocument(Stream content, string fileName, string contentType = null, string folderId = null)
         {
 			if (content.CanSeek)
@@ -374,22 +277,6 @@ namespace CloudProject
             var retVal = JObject.Parse(new StreamReader(response.GetResponseStream()).ReadToEnd());
             var file = retVal["entries"][0] as JObject;
             return parseMetadataJObject(file);
-        }
-
-        public override bool HasPermissionToEditFile(string fileId)
-        {
-            HttpWebRequest request = null;
-            request = (HttpWebRequest)WebRequest.Create("https://api.box.com/2.0/files/" + fileId + "?fields=permissions"); 
-            request.Headers["Authorization"] = "Bearer " + token.access_token;
-            //request.Headers["Accept-Encoding"] = "gzip, deflate";
-            request.Method = "GET";
-            HttpWebResponse response = (HttpWebResponse)request.GetResponse();
-            string body = new StreamReader(response.GetResponseStream()).ReadToEnd();
-
-            var retVal = JObject.Parse(body);
-            if ((bool)retVal["permissions"]["can_upload"]) 
-                return true;
-            return false;
         }
 
         public override void DeleteFile(string fileId)

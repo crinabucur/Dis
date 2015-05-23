@@ -138,26 +138,17 @@ namespace CloudProject
 		public OAuthToken token; //store the token info in the cloud storage consumer instance
 		public string name;
 
-        [Obsolete("It is best advised to retrieve files in a folder based manner, using ListFilesInFolder() in conjunction with GetRootFolderId()")]
-        public abstract List<CloudItem> ListAllFiles(IEnumerable<string> fileExtensions);
         public abstract List<CloudItem> ListFilesInFolder(string folderId, IEnumerable<string> fileExtensions);
         public abstract void ListSubfoldersInFolder(string folderId, string folderName, int outlineLevel, ref List<CloudFolder> list); // List<CloudFolder> ListSubfoldersInFolder(string folderId, int outlineLevel);
 	    public abstract List<CloudFolder> CreateOutlineDirectoryList();
-		public abstract bool TokenIsOk ();
-		public abstract string getRootFolderId ();
-        /// <summary>
-        /// save the content stream in the location specified by cloudItem.Id. cloudItem fields lastEdited and fileVersion will be updated after call
-        /// </summary>
-        /// <param name="cloudItem"></param>
-        /// <param name="content"></param>
-		public abstract CloudItem SaveOverwriteDocument(Stream content, String fileId, String contentType = null);
+		public abstract bool TokenIsOk();
+		public abstract string getRootFolderId();
         public abstract CloudItem SaveCreateDocument(Stream content, string fileName, string contentType = null, string folderId = null);
-		public abstract UserData GetUser ();
+		public abstract UserData GetUser();
         public abstract string GetSpaceQuota();
         public abstract CloudItem GetFileMetadata(string fileId);
         public abstract Stream GetDocument(string fileId);
 	    public abstract int GetFileSize(string fileId);
-	    public abstract bool HasPermissionToEditFile(string fileId);
 	    public abstract void DeleteFile(string fileId);
         public abstract bool DeleteFolder(string folderId);
 

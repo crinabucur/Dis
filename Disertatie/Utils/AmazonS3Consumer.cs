@@ -3,17 +3,10 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Net;
-using System.Reflection;
 using Amazon;
-using Amazon.EC2.Model;
-using Amazon.Runtime;
 using Amazon.S3;
 using Amazon.S3.Model;
 using CloudProject;
-using CloudProject_extensions;
-using DotNetOpenAuth.OpenId.Extensions.AttributeExchange;
-using Newtonsoft.Json.Converters;
 using UserData = CloudProject.UserData;
 
 namespace Disertatie.Utils
@@ -43,12 +36,6 @@ namespace Disertatie.Utils
                 throw e;
             }
             return true;
-        }
-
-        [Obsolete("It is best advised to retrieve files in a folder based manner, using ListFilesInFolder() in conjunction with GetRootFolderId()")]
-        public override List<CloudItem> ListAllFiles(IEnumerable<string> fileExtensions)
-        {
-            throw new NotImplementedException();
         }
 
         public List<CloudItem> ListBuckets()
@@ -174,34 +161,68 @@ namespace Disertatie.Utils
             throw new NotImplementedException();
         }
 
+        private void ListSubfoldersInFolder(string folderId, string folderName, string bucketName, int outlineLevel, ref List<CloudFolder> list)
+        {
+            list.Add(new CloudFolder { Name = folderName.TrimEnd('/'), OutlineLevel = outlineLevel, Id = folderId });
+
+            var request = new ListObjectsRequest { BucketName = bucketName, Prefix = folderId };
+            var response = _client.ListObjects(request);
+
+            foreach (S3Object entry in response.S3Objects)
+            {
+                if (string.Equals(entry.Key, folderId) || !entry.Key.EndsWith("/")) // this very same folder or not even a folder
+                    continue;
+
+                var item = new CloudItem
+                {
+                    Id = entry.Key,
+                    Name = entry.Key.TrimEnd('/')
+                };
+
+                if (item.Name.Split('/').Length != folderId.Split('/').Length)
+                    continue; // this is not a directly contained file / folder, it should not be shown at this level
+
+                item.Name = item.Name.Replace(folderId, "");
+
+                ListSubfoldersInFolder(item.Id, item.Name, bucketName, outlineLevel + 1, ref list);
+            }
+        }
+
         public override List<CloudFolder> CreateOutlineDirectoryList()
         {
-            throw new NotImplementedException();
+            var listOfBuckets = ListBuckets();
+            var list = new List<CloudFolder> { new CloudFolder { Name = "All Buckets", OutlineLevel = 0, Id = "/" } };
+
+            foreach (var bucket in listOfBuckets)
+            {
+                list.Add(new CloudFolder { Name = bucket.Name, OutlineLevel = 1, Id = bucket.Name });
+
+                var request = new ListObjectsRequest { BucketName = bucket.Name };
+                var response = _client.ListObjects(request);
+
+                // get the objects at the TOP LEVEL, i.e. not inside any folders
+                var objects = response.S3Objects.Where(o => !o.Key.Contains(@"/"));
+
+                // get the folders at the TOP LEVEL only
+                var folders = response.S3Objects.Except(objects).Where(o => o.Key.Last() == '/' && o.Key.IndexOf(@"/") == o.Key.LastIndexOf(@"/"));
+
+                foreach (S3Object entry in folders)
+                {
+                    ListSubfoldersInFolder(entry.Key, entry.Key, bucket.Name, 2, ref list);
+                }
+            }
+
+            return list;
         }
 
         public override bool TokenIsOk()
         {
-            if (_client == null)
-                return false;
-
-            try
-            {
-            }
-            catch
-            {
-                return false;
-            }
-            return true;
+            return _client != null;
         }
 
         public override string getRootFolderId()
         {
             return "_"; // conventional, as bucket names cannot contain the underscore character
-        }
-
-        public override CloudItem SaveOverwriteDocument(Stream content, string fileId, string contentType = null)
-        {
-            throw new NotImplementedException();
         }
 
         public override CloudItem SaveCreateDocument(Stream content, string fileName, string contentType = null, string folderId = null)
@@ -221,7 +242,24 @@ namespace Disertatie.Utils
 
         public override CloudItem GetFileMetadata(string fileId)
         {
-            throw new NotImplementedException();
+            GetObjectRequest request = new GetObjectRequest
+            {
+                BucketName = _currentBucket,
+                Key = fileId
+            };
+
+            GetObjectResponse response = _client.GetObject(request);
+
+            var item = new CloudItem
+            {
+                Id = response.Key,
+                isFolder = response.Key.EndsWith("/"),
+                Name = response.Key.TrimEnd('/'),
+                lastEdited = response.LastModified.ToString(),
+                cloudConsumer = name
+            };
+
+            return item;
         }
 
         public override Stream GetDocument(string fileId)
@@ -241,19 +279,24 @@ namespace Disertatie.Utils
             throw new NotImplementedException();
         }
 
-        public override bool HasPermissionToEditFile(string fileId)
-        {
-            throw new NotImplementedException();
-        }
-
         public override void DeleteFile(string fileId)
         {
-            throw new NotImplementedException();
+             DeleteFolder(fileId);
         }
 
         public override bool DeleteFolder(string folderId)
         {
-            throw new NotImplementedException();
+            DeleteObjectRequest deleteObjectRequest = new DeleteObjectRequest
+            {
+                BucketName = _currentBucket,
+                Key = folderId
+            };
+
+            _client.DeleteObject(deleteObjectRequest);
+
+            // TODO: manage non-empty bucket case
+            
+            return true;
         }
     }
 }

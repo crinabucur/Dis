@@ -135,11 +135,6 @@ namespace CloudProject
             return "basecamp_root";
         }
 
-        public override CloudItem SaveOverwriteDocument(Stream content, String fileId, String contentType = null)
-        {
-            throw new Exception("The method or operation is not implemented.");
-        }
-
         private UserData userData;
         public override UserData GetUser()
         {
@@ -188,32 +183,7 @@ namespace CloudProject
             };
         }
 
-        public override List<CloudItem> ListAllFiles(IEnumerable<string> fileExtensions)
-        {
-            var ret = new List<CloudItem>();
-
-            string url = string.Format("https://basecamp.com/{0}/api/v1/attachments.json", accountId);
-            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
-            request.Headers["Authorization"] = "Bearer " + token.access_token;
-            request.SetHeader("User-Agent", appName);
-            var retVal = JArray.Parse(new StreamReader(request.GetResponse().GetResponseStream()).ReadToEnd());
-
-            foreach (JObject obj in retVal)
-                foreach (string ext in fileExtensions)
-                    if (obj["name"].ToString().ToLower().EndsWith(ext.ToLower()))
-                    {
-                        ret.Add(GetFileMetadata(obj["url"].ToString()));
-                        break;
-                    }
-            return ret;
-        }
-
         public override CloudItem SaveCreateDocument(Stream content, string fileName, string contentType = null, string folderId = null)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override bool HasPermissionToEditFile(string fileId)
         {
             throw new NotImplementedException();
         }

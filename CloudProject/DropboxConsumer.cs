@@ -208,26 +208,6 @@ namespace CloudProject
             return (retVal["bytes"] != null) ? (int)retVal["bytes"] : 0;
         }
 
-        public override CloudItem SaveOverwriteDocument(Stream content, String fileId, String contentType = null)
-        {
-			if (content.CanSeek)
-				content.Position = 0;
-            if (contentType == null)
-                contentType = "application/vnd.ms-project";
-            HttpWebRequest request = (HttpWebRequest)WebRequest.Create("https://api-content.dropbox.com/1/files_put/dropbox" + fileId);
-            request.Headers["Authorization"] = "Bearer " + token.access_token;
-
-            request.ContentType = contentType;
-            request.Method = "PUT";
-            using (var reqStream = request.GetRequestStream())
-            {
-                content.CopyTo(reqStream);
-            }
-
-            var retVal = JObject.Parse(new StreamReader(request.GetResponse().GetResponseStream()).ReadToEnd());
-            return parseMetadataJObject(retVal);
-        }
-
         private UserData userData;
         public override UserData GetUser()
         {
@@ -278,49 +258,6 @@ namespace CloudProject
             return item;
         }
 
-        public override List<CloudItem> ListAllFiles(IEnumerable<string> fileExtensions)
-        {
-            //TODO this is hardcoded for *.mp* and *.xml file names only
-
-            var ret = new List<CloudItem>();
-
-            HttpWebRequest request = (HttpWebRequest)WebRequest.Create("https://api.dropbox.com/1/search/dropbox?query=.mp");
-            request.Headers["Authorization"] = "Bearer " + token.access_token;
-            request.Method = "GET";
-
-            HttpWebResponse response = (HttpWebResponse)request.GetResponse();
-            string body = new StreamReader(response.GetResponseStream()).ReadToEnd();
-			request.Abort ();
-            var retVal = JArray.Parse(body);
-
-            foreach (JObject file in retVal)
-                foreach (string ext in fileExtensions)
-                    if (((string)file["path"]).ToLower().EndsWith(ext.ToLower()))
-                    {
-                        ret.Add(parseMetadataJObject(file));
-                        break;
-                    }
-
-            request = (HttpWebRequest)WebRequest.Create("https://api.dropbox.com/1/search/dropbox?query=.xml");
-            request.Headers["Authorization"] = "Bearer " + token.access_token;
-
-            request.Method = "GET";
-
-            response = (HttpWebResponse)request.GetResponse();
-            body = new StreamReader(response.GetResponseStream()).ReadToEnd();
-			request.Abort ();
-            retVal = JArray.Parse(body);
-
-            foreach (JObject file in retVal)
-                foreach (string ext in fileExtensions)
-                    if (((string)file["path"]).ToLower().EndsWith(ext.ToLower()))
-                    {
-                        ret.Add(parseMetadataJObject(file));
-                        break;
-                    }
-            return ret;
-        }
-
         public List<string> GetFileRevisions(string path)
         {
             //to detect if a file is shared between two users is to search through its rev codes. A file has more rev codes (each corresponding to a revision). So when opening a dropbox file must check all its rev codes with the codes saved in FileLocation.cloudFilesAlreadyOpened (in this dictionary a Dropbox file is identified by its latest rev code at the time it was opened - but it might have been modified meanwhile)
@@ -360,12 +297,6 @@ namespace CloudProject
             var retVal = JObject.Parse(new StreamReader(request.GetResponse().GetResponseStream()).ReadToEnd());
 			request.Abort ();
             return parseMetadataJObject(retVal);
-        }
-
-        public override bool HasPermissionToEditFile(string fileId)
-        {
-            // All collaborators can edit a file (https://www.dropbox.com/help/60/en)
-            return true;
         }
 
         public override string GenerateShareUrlParam(CloudItem item)

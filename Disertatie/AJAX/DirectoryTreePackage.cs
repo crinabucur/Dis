@@ -59,7 +59,15 @@ namespace Disertatie.AJAX
                     }
                     else if (folder.OutlineLevel < currentOutline)
                     {
-                        previousNode.Parent.Parent.Nodes.Add(currentNode);
+                        var aux = currentOutline;
+                        TreeNode correctParent = previousNode; 
+                        while (aux >= folder.OutlineLevel)
+                        {
+                            aux--;
+                            correctParent = correctParent.Parent;
+                        }
+
+                        correctParent.Nodes.Add(currentNode); //previousNode.Parent.Parent.Nodes.Add(currentNode);
                     }
 
                     previousNode = currentNode;

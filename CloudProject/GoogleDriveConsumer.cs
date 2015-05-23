@@ -173,7 +173,7 @@ namespace CloudProject
             return (retVal["fileSize"] != null) ? (int)retVal["fileSize"] : ((retVal["quotaBytesUsed"] != null) ? (int)retVal["quotaBytesUsed"] : 0);
         }
 
-        public override CloudItem SaveOverwriteDocument(Stream content, String fileId, String contentType = null)
+        public CloudItem SaveOverwriteDocument(Stream content, String fileId, String contentType = null)
         {
 			if (content.CanSeek)
 				content.Position = 0;
@@ -263,31 +263,6 @@ namespace CloudProject
             return userData;
         }
 
-        [Obsolete("It is best advised to retrieve files in a folder based manner, using ListFilesInFolder() in conjunction with GetRootFolderId()")]
-        public override List<CloudItem> ListAllFiles(IEnumerable<string> fileExtensions)
-        {
-            var ret = new List<CloudItem>();
-
-            HttpWebRequest request = (HttpWebRequest)WebRequest.Create("https://www.googleapis.com/drive/v2/files?trashed = false");
-            request.Headers["Authorization"] = "Bearer " + token.access_token;
-            request.Method = "GET";
-            HttpWebResponse response = (HttpWebResponse)request.GetResponse();
-            string body = new StreamReader(response.GetResponseStream()).ReadToEnd();
-            var retVal = JObject.Parse(body);
-
-            var entries = (JArray)retVal["items"];
-            foreach (JObject file in entries)
-            {
-                foreach (string approovedExt in fileExtensions)
-                    if (file["title"].ToString().ToLower().EndsWith(approovedExt.ToLower()))
-                    {
-                        ret.Add(parseMetadataJObject(file));
-                        break;
-                    }
-            }
-            return ret;
-        }
-
         public override CloudItem SaveCreateDocument(Stream content, string fileName, string contentType = null, string folderId = null)
         {
 			if (content.CanSeek)
@@ -318,35 +293,8 @@ namespace CloudProject
             {
                 return SaveOverwriteDocument(content, JObject.Parse(new StreamReader(response.GetResponseStream()).ReadToEnd())["id"].ToString(), contentType);
             }
-            else
-            {
-                throw new Exception("Failed to create the document");
-            }
-        }
-
-        public override bool HasPermissionToEditFile(string fileId)
-        {
-            HttpWebRequest request = null;
-            request = (HttpWebRequest)WebRequest.Create("https://www.googleapis.com/drive/v2/files/" + fileId + "/permissions");
-            request.Headers["Authorization"] = "Bearer " + token.access_token;
-            request.Method = "GET";
-            HttpWebResponse response = (HttpWebResponse)request.GetResponse();
-            string body = new StreamReader(response.GetResponseStream()).ReadToEnd();
-
-            var retVal = JObject.Parse(body);
-            var entries = (JArray)retVal["items"];
-            var user = GetUser();
-            foreach (JObject permission in entries)
-            {
-                if (permission["id"].ToString() == user.Id) // one entry with the primary role for this user (possible values: owner, reader, writer)
-                {
-                    if (permission["role"].ToString() == "owner" || permission["role"].ToString() == "writer")
-                        return true;
-                }
-                else if (permission["id"].ToString() == "anyone" && permission["role"].ToString() == "writer") // general permission
-                    return true;
-            }
-            return false;
+            
+            throw new Exception("Failed to create the document");
         }
 
         public override void DeleteFile(string fileId) // TODO: TEST!!!!!

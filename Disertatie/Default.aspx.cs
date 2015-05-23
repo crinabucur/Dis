@@ -199,9 +199,6 @@ namespace Disertatie
             if (cloud.ToLower() != "box") return ""; // TODO: remove
             CloudStorageConsumer cloudConsumer = HttpContext.Current.Session[cloud.ToLower() + "Consumer"] as CloudStorageConsumer;
             return cloudConsumer.GetSpaceQuota();
-
-            //GetDirectoryTree(cloud);
-            //return "DELETE CODE!!!";
         }
 
         [WebMethod]

@@ -161,22 +161,6 @@ namespace CloudProject
             };
         }
 
-        public override CloudItem SaveOverwriteDocument(Stream content, String fileId, String contentType = null)
-        {
-            if (content.CanSeek)
-                content.Position = 0;
-
-            HttpWebRequest request = null;
-            request = (HttpWebRequest)WebRequest.Create("https://apis.live.net/v5.0/" + fileId + "/content" + "?access_token=" + token.access_token);
-            request.Method = "PUT";
-            using (var reqStream = request.GetRequestStream())
-            {
-                content.CopyTo(reqStream);
-            }
-            request.GetResponse();
-            return GetFileMetadata(fileId);
-        }
-
         private UserData userData;
         public override UserData GetUser()
         {
@@ -200,32 +184,6 @@ namespace CloudProject
             return userData;
         }
 
-        public override List<CloudItem> ListAllFiles(IEnumerable<string> fileExtensions)
-        {
-            //TODO include shared folder in the search
-            var ret = new List<CloudItem>();
-            // add shared folder
-            string URL = "https://apis.live.net/v5.0/me/skydrive/search?q=.&access_token=" + token.access_token;
-            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(URL);// TODO this is limited to 100 files per page - must check pagination and make subsequent api calls if necessary
-            request.Method = "GET";
-            HttpWebResponse response = (HttpWebResponse)request.GetResponse();
-            string body = new StreamReader(response.GetResponseStream()).ReadToEnd();
-
-            var retVal = JObject.Parse(body);
-
-            var entries = (JArray)retVal["data"];
-            foreach (JObject file in entries)
-                if (file["id"].ToString().StartsWith("file."))// check if it's a folder
-                    foreach (string ext in fileExtensions)
-                        if (file["name"].ToString().ToLower().EndsWith(ext.ToLower()))
-                        {
-                            ret.Add(parseMetadataJObject(file));
-                            break;
-                        }
-
-            return ret;
-        }
-
         public override CloudItem SaveCreateDocument(Stream content, string fileName, string contentType = null, string folderId = null)
         {
             if (folderId == null)
@@ -244,21 +202,6 @@ namespace CloudProject
             //get the created fileId and update fileLocation
             var retVal = JObject.Parse(new StreamReader(response.GetResponseStream()).ReadToEnd());
             return GetFileMetadata(retVal["id"].ToString());
-        }
-
-        public override bool HasPermissionToEditFile(string fileId)
-        {
-            HttpWebRequest request;
-            request = (HttpWebRequest) WebRequest.Create("https://apis.live.net/v5.0/" + fileId + "?access_token=" + token.access_token);
-            request.Method = "GET";
-            HttpWebResponse response = (HttpWebResponse) request.GetResponse();
-            string body = new StreamReader(response.GetResponseStream()).ReadToEnd();
-
-            var retVal = JObject.Parse(body);
-            var user = GetUser();
-            if ((retVal["from"])["id"].ToString() == user.Id) // for OneDrive, the only editor through API is the owner of the file
-                return true;
-            return false; // ideally, a distinction should be made between users that could edit and only they should get the "API limitation" message
         }
 
         public override void DeleteFile(string fileId)  // TODO: TEST!!!!!

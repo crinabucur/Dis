@@ -23,11 +23,6 @@ namespace CloudProject
 			name = "SharePoint";
 		}
 
-        public override List<CloudItem> ListAllFiles(IEnumerable<string> fileExtensions)
-        {
-            throw new NotImplementedException();
-        }
-
         public override List<CloudItem> ListFilesInFolder(string folderId, IEnumerable<string> fileExtensions)
         {
             string uri;
@@ -176,30 +171,6 @@ namespace CloudProject
         public override string getRootFolderId()
         {
 			return "";
-        }
-
-        public override CloudItem SaveOverwriteDocument(System.IO.Stream content, string fileId, string contentType = null)
-        {
-            if (content.CanSeek)
-                content.Position = 0;
-
-			HttpWebRequest request = WebRequest.Create (fileId) as HttpWebRequest;
-			request.Method = "PUT";
-			request.Headers ["Overwrite"] = "F";
-			request.Accept = "*/*";
-			request.ContentType = "multipart/form-data; charset=utf-8";
-			request.CookieContainer = new CookieContainer ();
-			request.CookieContainer.Add(new Uri("http://" + FedAuth.Domain), FedAuth);
-			if (rtFa != null)
-				request.CookieContainer.Add(new Uri("http://" + rtFa.Domain), rtFa);
-			request.Headers ["Accept-Language"] = "en-us";
-
-			using (var str = request.GetRequestStream ()) {
-				content.CopyTo (str);
-			}
-
-            var response = request.GetResponse();
-            return GetFileMetadata(fileId);
         }
 
         public override CloudItem SaveCreateDocument(Stream content, string fileName, string contentType = null, string folderId = null)
@@ -424,21 +395,6 @@ namespace CloudProject
 
             return (jobj["Length"] != null) ? (int)jobj["Length"] : 0;
         }
-
-        public override bool HasPermissionToEditFile(string fileId)
-		{
-            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(config.authorizeUri + "/_api/web/getFileByServerRelativeUrl('" + fileId.Replace(config.authorizeUri,"") + "')/ListItemAllFields/effectiveBasePermissions");
-			request.CookieContainer = new CookieContainer ();
-			request.CookieContainer.Add (new Uri ("http://" + FedAuth.Domain), FedAuth);
-            if (rtFa != null) request.CookieContainer.Add(new Uri("http://" + rtFa.Domain), rtFa);
-			request.Method = "GET";
-			request.Accept = "application/json;odata=verbose";
-			var resp = request.GetResponse ();
-			var r = new StreamReader (resp.GetResponseStream ()).ReadToEnd ();
-			JObject effectiveBasePermissions = JObject.Parse (r) ["d"]["EffectiveBasePermissions"] as JObject;
-			UInt32 low = UInt32.Parse(effectiveBasePermissions["Low"].ToString());
-			return (low | 4) == low;
-		}
 
         public override void DeleteFile(string fileId)
         {
