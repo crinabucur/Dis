@@ -20,7 +20,7 @@ namespace Disertatie.Utils
         {
             name = "AmazonS3";
             //Amazon.Util.ProfileManager.RegisterProfile("crina", "AKIAIEXSQM2VUJMASPSQ", "txaULBobX4VE98w9EfnNsbveaAx/TNBTrcUJOViR"); // profileName, accessKey, secretKey
-            CreateClient("AKIAIEXSQM2VUJMASPSQ", "txaULBobX4VE98w9EfnNsbveaAx/TNBTrcUJOViR", "US East (Virginia)");
+            CreateClient("", "", "");
             ListBuckets();
         }
 
