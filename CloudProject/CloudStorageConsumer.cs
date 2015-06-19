@@ -85,7 +85,7 @@ namespace CloudProject
                     }
                 case "mp4":
                     {
-                        imageUrl = "Images/unknownIcon_64x64.png"; // TODO: find image!
+                        imageUrl = "Images/File Icons/unknown.png"; // TODO: find image!
                         Type = "video";
                         break;
                     }
@@ -104,7 +104,7 @@ namespace CloudProject
 	                }
                 default:
 	                {
-                        imageUrl = "Images/unknownIcon_64x64.png";
+                        imageUrl = "Images/File Icons/unknown.png";
                         Type = "unknown";
 	                    IsKnownType = false;
 	                    break;
@@ -131,6 +131,12 @@ namespace CloudProject
         public string Id;
     }
 
+    public class ResponsePackage
+    {
+        public bool Error;
+        public string ErrorMessage;
+    }
+
 	public abstract class CloudStorageConsumer
 	{
         public OAuthServiceConfig config = new OAuthServiceConfig();
@@ -138,7 +144,7 @@ namespace CloudProject
 		public OAuthToken token; //store the token info in the cloud storage consumer instance
 		public string name;
 
-        public abstract List<CloudItem> ListFilesInFolder(string folderId, IEnumerable<string> fileExtensions);
+        public abstract List<CloudItem> ListFilesInFolder(string folderId);
         public abstract void ListSubfoldersInFolder(string folderId, string folderName, int outlineLevel, ref List<CloudFolder> list); // List<CloudFolder> ListSubfoldersInFolder(string folderId, int outlineLevel);
 	    public abstract List<CloudFolder> CreateOutlineDirectoryList();
 		public abstract bool TokenIsOk();
@@ -151,6 +157,7 @@ namespace CloudProject
 	    public abstract int GetFileSize(string fileId);
 	    public abstract void DeleteFile(string fileId);
         public abstract bool DeleteFolder(string folderId);
+        public abstract ResponsePackage AddFolder(string parentFolderId, string _name);
 
         /// <summary>
         /// A version of the GetDocument method which returns a CloudFileData - a convenient way to stick file metadata and content stream together

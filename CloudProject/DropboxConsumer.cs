@@ -82,6 +82,11 @@ namespace CloudProject
             }
         }
 
+        public override ResponsePackage AddFolder(string parentFolderId, string _name)
+        {
+            throw new NotImplementedException();
+        }
+
         public override CloudFileData GetDocument(CloudItem item)
         {
             actualFileId = item.Id;
@@ -92,7 +97,7 @@ namespace CloudProject
             };
         }
 
-        public override List<CloudItem> ListFilesInFolder(string folderId, IEnumerable<string> fileExtensions)
+        public override List<CloudItem> ListFilesInFolder(string folderId)
         {
 
             List<CloudItem> ret = new List<CloudItem>();

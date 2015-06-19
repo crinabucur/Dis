@@ -45,7 +45,7 @@ namespace Disertatie
                 }
             }
             #endregion
-            #region Amazon S3 integration
+            #region Amazon S3 integration - no longer used
             else if (_amazonRedirectUri != "" && Request["code"] != null && Request["code"] != "")
             {
                 // this must be an Amazon code
@@ -144,25 +144,39 @@ namespace Disertatie
         }
 
         [WebMethod]
-        public static string GetAmazonAuthenticationUrl(string currentLocation)
+        public static bool IsAuthAmazon()
         {
-            _amazonRedirectUri = currentLocation;
-            return "https://www.amazon.com/ap/oa?client_id=" + ((AmazonS3Consumer)HttpContext.Current.Session["amazons3Consumer"]).config.appKey + "&redirect_uri=" + currentLocation + "&scope=profile&response_type=code";
+            var amazons3ConsumerInstance = HttpContext.Current.Session["amazons3Consumer"] as CloudStorageConsumer;
+            return amazons3ConsumerInstance.TokenIsOk();
         }
+
+        [WebMethod]
+        public static bool AuthenticateAmazonS3(string accessKey, string secretKey, string region)
+        {
+            var amazons3ConsumerInstance = HttpContext.Current.Session["amazons3Consumer"] as AmazonS3Consumer;
+            return amazons3ConsumerInstance.CreateClient(accessKey, secretKey, region);
+        }
+
+        //[WebMethod]
+        //public static string GetAmazonAuthenticationUrl(string currentLocation)
+        //{
+        //    _amazonRedirectUri = currentLocation;
+        //    return "https://www.amazon.com/ap/oa?client_id=" + ((AmazonS3Consumer)HttpContext.Current.Session["amazons3Consumer"]).config.appKey + "&redirect_uri=" + currentLocation + "&scope=profile&response_type=code";
+        //}
         #endregion Clouds authentication
 
         [WebMethod]
-        public static List<CloudItem> ListFilesInFolder(string cloud, string folderId, string[] extensions)
+        public static List<CloudItem> ListFilesInFolder(string cloud, string folderId)
         {
-            if (extensions == null)
-                extensions = new string[] { ".mpp", ".mpx", ".xml" }; //TODO: change
+            //if (extensions == null)
+            //    extensions = new string[] { ".mpp", ".mpx", ".xml" }; //TODO: change
 
             IDictionary<string, string> ret = null;
             
             var cloudConsumer = HttpContext.Current.Session[cloud.ToLower() + "Consumer"] as CloudStorageConsumer;
-            if (folderId == null || folderId == "null")
-                folderId = cloudConsumer.getRootFolderId();
-            return cloudConsumer.ListFilesInFolder(folderId, extensions);
+            //if (folderId == null || folderId == "null")
+            //    folderId = cloudConsumer.getRootFolderId(); // should be fixed
+            return cloudConsumer.ListFilesInFolder(folderId);
         }
 
         [WebMethod]
@@ -184,13 +198,22 @@ namespace Disertatie
         }
 
         [WebMethod]
+        public static ResponsePackage NewFolder(string cloud, string parentFolderId, string _name)
+        {
+            var cloudConsumer = HttpContext.Current.Session[cloud.ToLower() + "Consumer"] as CloudStorageConsumer;
+            if (cloudConsumer == null) return null;
+
+            return cloudConsumer.AddFolder(parentFolderId, _name);
+        }
+
+        [WebMethod]
         public static string ShareFileLink(string cloud, string fileId)
         {
             var cloudConsumer = HttpContext.Current.Session[cloud.ToLower() + "Consumer"] as CloudStorageConsumer;
             string baseUrl = HttpContext.Current.Request.Url.GetLeftPart(UriPartial.Path);
             baseUrl = baseUrl.Replace("/ShareFileLink", ""); // remove method names from context url
             string shareUrl = cloudConsumer.GenerateShareUrlParam(cloudConsumer.GetFileMetadata(fileId));
-            return baseUrl + "?xid=" + Uri.EscapeDataString(shareUrl); 
+            return baseUrl + "?xid=" + Uri.EscapeDataString(shareUrl);
         }
 
         [WebMethod]

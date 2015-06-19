@@ -16,7 +16,7 @@ namespace CloudProject
             name = "OneDrive";
         }
 
-        public override List<CloudItem> ListFilesInFolder(string folderId, IEnumerable<string> fileExtensions)
+        public override List<CloudItem> ListFilesInFolder(string folderId)
         {
             List<CloudItem> ret = new List<CloudItem>();
             HttpWebRequest request = (HttpWebRequest)WebRequest.Create("https://apis.live.net/v5.0/" + folderId + "/files?access_token=" + token.access_token);
@@ -224,6 +224,46 @@ namespace CloudProject
             {
                 return false;
             }
+        }
+
+        public override ResponsePackage AddFolder(string parentFolderId, string _name)
+        {
+            var ret = new ResponsePackage();
+            HttpWebRequest request = (HttpWebRequest)WebRequest.Create("https://apis.live.net/v5.0/" + parentFolderId);
+            request.Headers["Authorization"] = "Bearer " + token.access_token;
+            request.Method = "POST";
+            request.ContentType = "application/json";
+
+            if (string.Equals(parentFolderId, "null"))
+                parentFolderId = getRootFolderId();
+
+            string json = "{\"name\":\"" + _name + "\"}";
+            byte[] bytes = System.Text.UTF8Encoding.UTF8.GetBytes(json);
+            using (var reqStream = request.GetRequestStream())
+            {
+                reqStream.Write(bytes, 0, bytes.Length);
+            }
+
+            try
+            {
+                HttpWebResponse response = (HttpWebResponse)request.GetResponse();
+            }
+            catch (WebException we)
+            {
+                ret.Error = true;
+
+                var errorResponse = we.Response as HttpWebResponse;
+                if (errorResponse != null && errorResponse.StatusCode == HttpStatusCode.Conflict)
+                {
+                    ret.Error = true;
+                    ret.ErrorMessage = "A folder with the same name already exists!";
+                }
+                else
+                {
+                    ret.ErrorMessage = "The folder couldn't be created! Please check that the OneDrive folder name is not too long and it doesn't contain invalid characters!";
+                }
+            }
+            return ret;
         }
     }
 }

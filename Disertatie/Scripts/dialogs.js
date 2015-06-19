@@ -87,6 +87,106 @@ function AuthenticateSharepointDialog(cloudActionOnOffice365Redirect, callback) 
     });
 }
 
+function AuthenticateAmazonDialog(cloudActionOnOffice365Redirect, callback) {
+    PageMethods.IsAuthAmazon(function (response) {
+        if (!response) {
+            var objectWidth = 450;
+            var objectHeight = 150;
+
+            var dialogPaddingWidth = 50;
+            var dialogPaddingHeight = 20;
+
+            var dialogWidth = objectWidth + dialogPaddingWidth;
+            var dialogHeight = objectHeight + dialogPaddingHeight;
+
+            // Create a modal dialog with predefined height, width and title
+            CreateModalDialog(dialogHeight, dialogWidth, "Amazon S3 Login");
+            
+            // Create the dialog content ($ModalDialogContent)
+            var acesskey = "<input id='acesskey' name='access' type='text' value='' style='width:280px'>";
+            var secretkey = "<input id='secretkey' name='secret' type='password' style='width:280px'>";
+            var region = "<select id='regionselect' name='region' style='width:150px; height:24px;'> " +
+                "<option>US East (Virginia)</option>" +
+                "<option>US West (N. California)</option>" +
+                "<option>US West (Oregon)</option>" +
+                "<option>EU West (Ireland)</option>" +
+                "<option>EU Central (Frankfurt)</option>" +
+                "<option>Asia Pacific (Tokyo)</option>" +
+                "<option>Asia Pacific (Singapore)</option>" +
+                "<option>Asia Pacific (Sydney)</option>" +
+                "<option>South America (Sao Paulo)</option>" +
+                "<option>US GovCloud West (Oregon)</option>" +
+                "<option>China (Beijing)</option>" +
+            "</select> ";
+
+
+            // Set the modal dialog content
+            var content = "<form id='awsform' action='#'><div style='margin-top:20px;margin-left:5px;margin-right:5px' id='maindiv'>"
+                + "<table cellspacing='1' style='font-size:12px; margin-left:0px; margin-right:0px;width:100%;'>"
+                + "<tbody style='text-align:left;'>";
+
+            content += "<tr>"
+                + "<td style='width:140px'>AWS access key: </td>"
+                + "<td>" + acesskey + "</td>"
+                + "</tr>"
+                + "<tr><td style='width:140px'>AWS secret key: </td>"
+                + "<td>" + secretkey + "</td>"
+                + "</tr>"
+                + "<tr><td style='width:140px'>Region: </td>"
+                + "<td>" + region + "</td>"
+                + "</tr>"
+                + "<tr><td colspan='2'><span id='errorfield' style='color:crimson; display:none; height:30px;'></span></td></tr>";
+
+            content += "</tbody></table></div></form>";
+            $ModalDialogContent.html(content);
+
+            // Set the modal dialog content width and height
+            $ModalDialogContent.width(objectWidth);
+            $ModalDialogContent.height(objectHeight);
+
+            //  Set dialog buttons and actions.
+            SetModalDialogOption("buttons", [
+        {
+            text: "Ok",
+            click: function () {
+                var id = $ModalDialogContent.find("#acesskey");
+                id = (id != undefined) ? id.val() : "";
+                if (id == "") {
+                    $ModalDialogContent.find("#errorfield").show();
+                    $ModalDialogContent.find("#errorfield").text("Error: Invalid access key, field cannot be left empty!");
+                } else {
+                    $ModalDialogContent.find("#errorfield").hide();
+                    var form = $ModalDialogContent.find("#awsform");
+                    form.submit();
+                }
+            }
+        }, {
+            text: "Cancel",
+            click: function () {
+                // Dismiss the modal dialog when the user cancels the action. 
+                CloseModalDialog();
+            }
+        }]);
+
+            // The dialog is set up. Time to present the dialog.
+            ShowModalDialog(dialogHeight, dialogWidth);
+        }
+        else {
+            CloseModalDialog();
+            callback();
+        }
+
+        $('#awsform').submit(function (e) {
+            e.preventDefault();
+            PageMethods.AuthenticateAmazonS3(this.access.value, this.secret.value, this.region.value, function (resp) {
+                $("#AmazonS3").remove();
+                ListContents("AmazonS3", null);
+                CloseModalDialog();
+            });
+        });
+    });
+}
+
 function CreateModalDialog(dialogHeight, dialogWidth, dialogTitle) {
     //  create the modal dialog
     $ModalDialog.dialog({
@@ -95,10 +195,16 @@ function CreateModalDialog(dialogHeight, dialogWidth, dialogTitle) {
         width: dialogWidth,
         height: dialogHeight,
         modal: true,
-        resizable: true, // false
+        resizable: false,
         zIndex: 900,
-        show: "",
-        hide: "",
+        show: {
+            effect: "fadeIn",
+            duration: 100
+        },
+        hide: {
+            effect: "fadeOut",
+            duration: 0
+        },
         closeOnEscape: true,
         buttons: "",
         //position: ['middle', 50],
@@ -172,6 +278,88 @@ function InitializeDialogs() {
 
         cloudService = 'null';
     }
+}
+
+function AddFolderDialog(cloud, parentFolderId) {
+    var objectWidth = 450;
+    var objectHeight = 80; //150
+
+    var dialogPaddingWidth = 50;
+    var dialogPaddingHeight = 20;
+
+    var dialogWidth = objectWidth + dialogPaddingWidth;
+    var dialogHeight = objectHeight + dialogPaddingHeight;
+
+    // Create a modal dialog with predefined height, width and title
+    CreateModalDialog(dialogHeight, dialogWidth, "Add Folder");
+
+    // Create the dialog content ($ModalDialogContent)
+    var name = "<input id='foldername' type='text' value='' style='width:332px; margin-left:5px;'>";
+
+    // Set the modal dialog content
+    var content = "<div style='margin-top:20px;margin-left:5px;margin-right:5px' id='maindiv'>";
+
+    content += "Folder name: "  + name;
+
+    content += "</div>";
+    $ModalDialogContent.html(content);
+
+    // Set the modal dialog content width and height
+    $ModalDialogContent.width(objectWidth);
+    $ModalDialogContent.height(objectHeight);
+
+    //  Set dialog buttons and actions.
+    SetModalDialogOption("buttons", [
+    {
+        text: "Ok",
+        click: function () {
+            var foldername = ($("#foldername") != undefined) ? $("#foldername").val() : "";
+
+            if (foldername != "") {
+                //PageMethods.NewFolder(cloud, parentFolderId, foldername, function (response) {
+                //    if (response.Error)
+                //        showError(response.ErrorMessage);
+                //    else ListContents(cloud, parentFolderId);
+                //    CloseModalDialog();
+                //});
+
+                var success = false;
+                var resp;
+
+                $.ajax({
+                    type: "POST",
+                    url: "../Default.aspx/NewFolder",
+                    data: '{ "cloud" : "' + cloud + '" , "parentFolderId" :' + JSON.stringify(parentFolderId) + ', "_name" :' + JSON.stringify(foldername) + '}',
+                    contentType: "application/json; charset=utf-8",
+                    dataType: "json",
+                    async: false,
+                    success: function (response) {
+                        resp = response.d;
+                        if (!resp.Error) {
+                            success = true;
+                            CloseModalDialog();
+                            ListContents(cloud, parentFolderId);
+                        }
+                    }
+                });
+
+                if (!success) {
+                    showError(resp.ErrorMessage);
+                    CloseModalDialog();
+                }
+            } 
+        }
+    },
+    {
+        text: "Cancel",
+        click: function () {
+            // Dismiss the modal dialog when the user cancels the action. 
+            CloseModalDialog();
+    }
+    }]);
+
+    // The dialog is set up. Time to present the dialog.
+    ShowModalDialog(dialogHeight, dialogWidth);
 }
 
 function MoveOrCopyDialog(callingItem) {

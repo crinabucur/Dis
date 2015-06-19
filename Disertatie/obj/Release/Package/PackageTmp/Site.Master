@@ -1,0 +1,158 @@
+﻿<%@ Master Language="C#" AutoEventWireup="true" CodeBehind="Site.master.cs" Inherits="Disertatie.SiteMaster" %>
+
+<!DOCTYPE html>
+<html lang="en">
+<head runat="server">
+    <meta charset="utf-8" />
+    <title><%: Page.Title %> - My ASP.NET Application</title>
+    <asp:PlaceHolder runat="server">     
+          <%: Scripts.Render("~/bundles/modernizr") %>
+    </asp:PlaceHolder>  
+    <webopt:BundleReference runat="server" Path="~/Content/css" /> 
+    <link href="~/favicon.ico" rel="shortcut icon" type="image/x-icon" />
+    <meta name="viewport" content="width=device-width" />
+    <link href="Content/themes/base/jquery-ui.css" rel="stylesheet" />
+    <link href="Content/themes/base/jquery-ui-1.11.4.css" rel="stylesheet" />
+    <link href="Content/jQuery.FileUpload/css/jquery.fileupload-noscript.css" rel="stylesheet" />
+    <link href="Content/jQuery.FileUpload/css/jquery.fileupload-ui-noscript.css" rel="stylesheet" />
+    <link href="Content/jQuery.FileUpload/css/jquery.fileupload-ui.css" rel="stylesheet" />
+    <link href="Content/jQuery.FileUpload/css/jquery.fileupload.css" rel="stylesheet" />
+    <asp:ContentPlaceHolder runat="server" ID="HeadContent" />
+</head>
+<body>
+    <form runat="server">
+    <asp:ScriptManager runat="server" EnablePageMethods="true">
+        <Scripts>
+            <%--To learn more about bundling scripts in ScriptManager see http://go.microsoft.com/fwlink/?LinkID=272931&clcid=0x409 --%>
+            <%--Framework Scripts--%>
+            
+            <asp:ScriptReference Name="MsAjaxBundle" />
+            <asp:ScriptReference Name="jquery" />
+            <asp:ScriptReference Name="jquery.ui.combined" />
+            <asp:ScriptReference Name="WebForms.js" Assembly="System.Web" Path="~/Scripts/WebForms/WebForms.js" />
+            <asp:ScriptReference Name="WebUIValidation.js" Assembly="System.Web" Path="~/Scripts/WebForms/WebUIValidation.js" />
+            <asp:ScriptReference Name="MenuStandards.js" Assembly="System.Web" Path="~/Scripts/WebForms/MenuStandards.js" />
+            <asp:ScriptReference Name="GridView.js" Assembly="System.Web" Path="~/Scripts/WebForms/GridView.js" />
+            <asp:ScriptReference Name="DetailsView.js" Assembly="System.Web" Path="~/Scripts/WebForms/DetailsView.js" />
+            <asp:ScriptReference Name="TreeView.js" Assembly="System.Web" Path="~/Scripts/WebForms/TreeView.js" />
+            <asp:ScriptReference Name="WebParts.js" Assembly="System.Web" Path="~/Scripts/WebForms/WebParts.js" />
+            <asp:ScriptReference Name="Focus.js" Assembly="System.Web" Path="~/Scripts/WebForms/Focus.js" />
+            <asp:ScriptReference Name="WebFormsBundle" />
+            <%--Site Scripts--%>
+            <asp:ScriptReference Path="~/Scripts/jquery-1.8.2.min.js" />
+           <%-- <asp:ScriptReference Path="~/Scripts/jquery-ui-1.8.24.min.js" />--%>
+            <asp:ScriptReference Path="~/Scripts/jquery-ui-1.11.4.js" />
+            <asp:ScriptReference Path="~/Scripts/jquery.blockUI.js"/>
+            <asp:ScriptReference Path="~/Scripts/jquery.coords.js" />
+            <asp:ScriptReference Path="~/Scripts/jquery.draggable.js" />
+            <asp:ScriptReference Path="~/Scripts/jquery.gridster.js" />
+            <asp:ScriptReference Path="~/Scripts/jquery.gridster.extras.js" />
+            <asp:ScriptReference Path="~/Scripts/jquery.collision.js" />
+            <asp:ScriptReference Path="~/Scripts/jquery.dynatree.js"/>
+            <asp:ScriptReference Path="~/Scripts/utils.js" />
+            <asp:ScriptReference Path="~/Scripts/dialogs.js"/>
+            <asp:ScriptReference Path="~/Scripts/functions.js"/>
+            <%--<asp:ScriptReference Path="~/Scripts/jQuery.FileUpload/jquery.ui.widget.js" />--%>
+            <asp:ScriptReference Path="~/Scripts/jQuery.FileUpload/jquery.iframe-transport.js"/>
+            <asp:ScriptReference Path="~/Scripts/jQuery.FileUpload/jquery.fileupload.js"/>
+            
+
+            <%--<asp:ScriptReference Path="~/Scripts/FileUpload/backload.demo.js" />
+            <asp:ScriptReference Path="~/Scripts/FileUpload/jqueryui/jquery.fileupload.js"/>
+            <asp:ScriptReference Path="~/Scripts/FileUpload/jqueryui/jquery.fileupload-jui.js"/>
+            <asp:ScriptReference Path="~/Scripts/FileUpload/jquery.fileupload-ui.js"/>
+            <asp:ScriptReference Path="~/Scripts/FileUpload/jquery.iframe-transport.js"/>
+            <asp:ScriptReference Path="~/Scripts/FileUpload/jqueryui/jquery.ui.widget.js"/>
+            <asp:ScriptReference Path="~/Scripts/FileUpload/jquery.fileupload.js"/>
+            <asp:ScriptReference Path="~/Scripts/FileUpload/angularjs/angular.debug.js"/>
+            <asp:ScriptReference Path="~/Scripts/FileUpload/bootstrap/bootstrap-image-gallery.debug.js"/>
+            <asp:ScriptReference Path="~/Scripts/FileUpload/bootstrap/bootstrap.debug.js"/>
+            <asp:ScriptReference Path="~/Scripts/FileUpload/cors/jquery.postmessage-transport.js"/>
+            <asp:ScriptReference Path="~/Scripts/FileUpload/cors/jquery.xdr-transport.js"/>
+            <asp:ScriptReference Path="~/Scripts/FileUpload/canvas-to-blob.debug.js"/>
+            <asp:ScriptReference Path="~/Scripts/FileUpload/jquery.fileupload-angular.js"/>
+            <asp:ScriptReference Path="~/Scripts/FileUpload/jquery.fileupload-audio.js"/>
+            <asp:ScriptReference Path="~/Scripts/FileUpload/jquery.fileupload-fp.js"/>
+            <asp:ScriptReference Path="~/Scripts/FileUpload/jquery.fileupload-image.js"/>
+            <asp:ScriptReference Path="~/Scripts/FileUpload/jquery.fileupload-jui.js"/>
+            <asp:ScriptReference Path="~/Scripts/FileUpload/jquery.fileupload-process.js"/>
+            <asp:ScriptReference Path="~/Scripts/FileUpload/jquery.fileupload-ui.js"/>
+            <asp:ScriptReference Path="~/Scripts/FileUpload/jquery.fileupload-validate.js"/>
+            <asp:ScriptReference Path="~/Scripts/FileUpload/jquery.fileupload-video.js"/>
+            
+            <asp:ScriptReference Path="~/Scripts/FileUpload/jquery.iframe-transport.js"/>
+            <asp:ScriptReference Path="~/Scripts/FileUpload/jquery.image-gallery.debug.js"/>
+            <asp:ScriptReference Path="~/Scripts/FileUpload/load-image.debug.js"/>
+            <asp:ScriptReference Path="~/Scripts/FileUpload/tmpl.debug.js"/>--%>
+        </Scripts>
+    </asp:ScriptManager>
+    <header>
+        <div class="content-wrapper">
+            <div class="float-left">
+                <p class="site-title">
+                    <a runat="server" href="~/">your logo here</a>
+                </p>
+            </div>
+            <div class="float-right">
+                <section id="login">
+                    <asp:LoginView runat="server" ViewStateMode="Disabled">
+                        <AnonymousTemplate>
+                            <ul>
+                                <li><a id="registerLink" runat="server" href="~/Account/Register">Register</a></li>
+                                <li><a id="loginLink" runat="server" href="~/Account/Login">Log in</a></li>
+                            </ul>
+                        </AnonymousTemplate>
+                        <LoggedInTemplate>
+                            <p>
+                                Hello, <a runat="server" class="username" href="~/Account/Manage" title="Manage your account">
+                                    <asp:LoginName runat="server" CssClass="username" /></a>!
+                                <asp:LoginStatus runat="server" LogoutAction="Redirect" LogoutText="Log off" LogoutPageUrl="~/" />
+                            </p>
+                        </LoggedInTemplate>
+                    </asp:LoginView>
+                </section>
+                <nav>
+                    <ul id="menu">
+                        <li><a runat="server" href="~/">Home</a></li>
+                        <li><a runat="server" href="~/About">About</a></li>
+                        <li><a runat="server" href="~/Contact">Contact</a></li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </header>
+    <div id="body" style="min-height:800px">
+        <asp:ContentPlaceHolder runat="server" ID="FeaturedContent" />
+        <section class="content-wrapper main-content clear-fix">
+            <asp:ContentPlaceHolder runat="server" ID="MainContent" />
+        </section>
+    </div>
+    <footer>
+        <div class="content-wrapper">
+            <div class="float-left">
+                <p>Copyright <%=DateTime.Now.Year%> - <a>Crina Bucur</a></p>
+            </div>
+        </div>
+    </footer>
+        <div id="Dialogs" style="display: none;">
+        <div id="ModalDialog">
+            <div id="ModalDialogContent" class="ui-widget-content">
+            </div>
+        </div>
+    </div>
+    <div id="DialogsContent" style="display: none">
+        <div id="DialogsContentError">
+            <table style="width: 100%; height: 100%; font-weight: bold; font-size: x-small;">
+                <tr style="height: 100%;">
+                    <td style="vertical-align: middle;">
+                        <img alt="Error Icon" src="Images/error.png" style="width: 64px; height: 64px;" />
+                    </td>
+                    <td style="width: 100%; text-align: left; vertical-align: middle;" id="DialogsContentErrorMessage">
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+    </form>
+</body>
+</html>

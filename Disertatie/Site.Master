@@ -4,15 +4,15 @@
 <html lang="en">
 <head runat="server">
     <meta charset="utf-8" />
-    <title><%: Page.Title %> - My ASP.NET Application</title>
+    <title><%: Page.Title %> - CloudSphere</title>
     <asp:PlaceHolder runat="server">     
           <%: Scripts.Render("~/bundles/modernizr") %>
     </asp:PlaceHolder>  
     <webopt:BundleReference runat="server" Path="~/Content/css" /> 
-    <link href="~/favicon.ico" rel="shortcut icon" type="image/x-icon" />
+    <link href="~/favicon.png" rel="shortcut icon" type="image/x-icon" />
     <meta name="viewport" content="width=device-width" />
     <link href="Content/themes/base/jquery-ui.css" rel="stylesheet" />
-    <link href="Content/themes/base/jquery-ui-1.11.4.css" rel="stylesheet" />
+    <%--<link href="Content/themes/base/jquery-ui-1.11.4.css" rel="stylesheet" /> --%>
     <link href="Content/jQuery.FileUpload/css/jquery.fileupload-noscript.css" rel="stylesheet" />
     <link href="Content/jQuery.FileUpload/css/jquery.fileupload-ui-noscript.css" rel="stylesheet" />
     <link href="Content/jQuery.FileUpload/css/jquery.fileupload-ui.css" rel="stylesheet" />
@@ -41,7 +41,7 @@
             <%--Site Scripts--%>
             <asp:ScriptReference Path="~/Scripts/jquery-1.8.2.min.js" />
            <%-- <asp:ScriptReference Path="~/Scripts/jquery-ui-1.8.24.min.js" />--%>
-            <asp:ScriptReference Path="~/Scripts/jquery-ui-1.11.4.js" />
+            <asp:ScriptReference Path="~/Scripts/jquery-ui.js" /> <%--<asp:ScriptReference Path="~/Scripts/jquery-ui-1.11.4.js" />--%>
             <asp:ScriptReference Path="~/Scripts/jquery.blockUI.js"/>
             <asp:ScriptReference Path="~/Scripts/jquery.coords.js" />
             <asp:ScriptReference Path="~/Scripts/jquery.draggable.js" />
@@ -97,7 +97,7 @@
                 <section id="login">
                     <asp:LoginView runat="server" ViewStateMode="Disabled">
                         <AnonymousTemplate>
-                            <ul>
+                            <ul style="visibility:hidden">
                                 <li><a id="registerLink" runat="server" href="~/Account/Register">Register</a></li>
                                 <li><a id="loginLink" runat="server" href="~/Account/Login">Log in</a></li>
                             </ul>
@@ -121,7 +121,7 @@
             </div>
         </div>
     </header>
-    <div id="body" style="min-height:800px">
+    <div id="body" style="min-height:694px"> <%--800px--%>
         <asp:ContentPlaceHolder runat="server" ID="FeaturedContent" />
         <section class="content-wrapper main-content clear-fix">
             <asp:ContentPlaceHolder runat="server" ID="MainContent" />
@@ -140,7 +140,7 @@
             </div>
         </div>
     </div>
-    <div id="DialogsContent" style="display: none">
+    <%--<div id="DialogsContent" style="display: none">
         <div id="DialogsContentError">
             <table style="width: 100%; height: 100%; font-weight: bold; font-size: x-small;">
                 <tr style="height: 100%;">
@@ -152,7 +152,8 @@
                 </tr>
             </table>
         </div>
-    </div>
+    </div>--%>
+    <div class="error" style="position:fixed; left:20px; top:30px; width:280px; height:165px; background:#FEF1EC url('images/ui-bg_glass_95_fef1ec_1x400.png') repeat-x scroll !important; display:none; overflow:hidden;"><span id="errorMessage" style="position:absolute; top:12px;"></span></div>
     </form>
 </body>
 </html>

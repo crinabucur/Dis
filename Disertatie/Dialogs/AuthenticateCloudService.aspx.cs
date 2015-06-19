@@ -41,7 +41,13 @@ namespace Disertatie.Dialogs
                         string[] scopes = null;
                         if (cloudConsumer.config.scope != null)
                             scopes = cloudConsumer.config.scope.Split(new char[] { '+', ';', ' ' });
+
                         Uri callback = MessagingUtilities.GetRequestUrlFromContext().StripQueryArgumentsWithPrefix("oauth_").StripQueryArgumentsWithPrefix("action").StripQueryArgumentsWithPrefix("cloud").StripQueryArgumentsWithPrefix("fileExtensions");
+
+                        // 31.05.2015 workaround for OneDrive not working on localhost
+                        //if (cloudConsumer.name == "OneDrive")
+                        //    callback = new Uri("http://www.localhost34342.com/Disertatie/dialogs/authenticatecloudservice.aspx");// new Uri("http://www.localhost34342.com/Dialogs/AuthenticateCloudService.aspx");
+                        
                         var request = wsClient.PrepareRequestUserAuthorization(scopes, callback);
                         request.Send();
                     }

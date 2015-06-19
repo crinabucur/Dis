@@ -35,7 +35,7 @@ namespace CloudProject
             var _client = new HttpClient(_handler);
         }
 
-        public override List<CloudItem> ListFilesInFolder(string folderId, IEnumerable<string> fileExtensions)
+        public override List<CloudItem> ListFilesInFolder(string folderId)
         {
             List<CloudItem> ret = new List<CloudItem>();
             WebRequest request = WebRequest.Create("https://api.box.com/2.0/folders/" + folderId + "/items?fields=name,modified_at,modified_by");
@@ -305,6 +305,57 @@ namespace CloudProject
                 request.Abort();
             }
             return false;
+        }
+
+        public override ResponsePackage AddFolder(string parentFolderId, string _name)
+        {
+            // Box only supports folder names of 255 characters or less. Names that will not be supported are those that contain non-printable ascii, / or \, 
+            // names with trailing spaces, and the special names “.” and “..”.
+
+            var ret = new ResponsePackage();
+            HttpWebRequest request = (HttpWebRequest)WebRequest.Create("https://api.box.com/2.0/folders");
+            request.Headers["Authorization"] = "Bearer " + token.access_token;
+            request.Method = "POST";
+            request.ContentType = "text/json";
+
+            if (string.Equals(parentFolderId, "null"))
+                parentFolderId = getRootFolderId();
+
+            string json = "{\"name\":\"" + _name + "\"," +
+                          "\"parent\":{\"id\":\"" + parentFolderId + "\"}}";
+            byte[] bytes = System.Text.UTF8Encoding.UTF8.GetBytes(json);
+            using (var reqStream = request.GetRequestStream())
+            {
+                reqStream.Write(bytes, 0, bytes.Length);
+            }
+
+            try
+            {
+                HttpWebResponse response = (HttpWebResponse) request.GetResponse();
+                if (response.StatusCode != HttpStatusCode.Created)
+                {
+                    //ret.Error = true;
+                    //ret.ErrorMessage = "The folder couldn't be created! Box only allows folder names with less than 256 characters, that do not contain " +
+                    //                   "trailing spaces, '/', '\' and the special names '.' and '..'!";
+                }
+            }
+            catch(WebException we)
+            {
+                ret.Error = true;
+
+                var errorResponse = we.Response as HttpWebResponse;
+                if (errorResponse != null && errorResponse.StatusCode == HttpStatusCode.Conflict) // HttpStatusCode.Created on success
+                {
+                    ret.Error = true;
+                    ret.ErrorMessage = "A folder with the same name already exists!";
+                }
+                else
+                {
+                    ret.ErrorMessage = "The folder couldn't be created! Box only allows folder names with less than 256 characters, that do not contain " +
+                                       "trailing spaces, '/', '\' and the special names '.' and '..'!";
+                }
+            }
+            return ret;
         }
 
         public bool MoveFilesAndFolders(List<string> ids, string newParentId)

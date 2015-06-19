@@ -59,7 +59,8 @@ namespace Disertatie
             googledrive.config.appSecret = ConfigurationManager.AppSettings["googleConsumerSecret"];
             googledrive.config.authorizeUri = "https://accounts.google.com/o/oauth2/auth";
             googledrive.config.tokenUri = "https://accounts.google.com/o/oauth2/token";
-            googledrive.config.scope = "https://www.googleapis.com/auth/drive+https://www.googleapis.com/auth/drive.install";
+            googledrive.config.scope = 
+                "https://www.googleapis.com/auth/drive+https://www.googleapis.com/auth/drive.install";
             Session["googledriveConsumer"] = googledrive;
 
             //OneDrive

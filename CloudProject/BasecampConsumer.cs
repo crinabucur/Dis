@@ -47,7 +47,7 @@ namespace CloudProject
             return ret;
         }
 
-        public override List<CloudItem> ListFilesInFolder(string projectId, IEnumerable<string> fileExtensions)
+        public override List<CloudItem> ListFilesInFolder(string projectId)
         {
             List<CloudItem> items = new List<CloudItem>();
             if (projectId == getRootFolderId())
@@ -69,14 +69,8 @@ namespace CloudProject
             var docs = JArray.Parse(responseString);
             foreach (JObject file in docs)
             {
-                foreach (string ext in fileExtensions)
-                {
-                    if (file["name"].ToString().ToLower().EndsWith(ext.ToLower()))
-                    {
-                        items.Add(GetFileMetadata(file["url"].ToString()));
-                        break;
-                    }
-                }
+                items.Add(GetFileMetadata(file["url"].ToString()));
+                break;
             }
 
             return items;
@@ -196,6 +190,54 @@ namespace CloudProject
         public override bool DeleteFolder(string folderId)
         {
             throw new NotImplementedException();
+        }
+
+        public override ResponsePackage AddFolder(string parentFolderId, string _name)
+        {
+            var ret = new ResponsePackage();
+
+            string url = string.Format("https://basecamp.com/{0}/api/v1/projects.json", accountId);
+            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
+            request.Headers["Authorization"] = "Bearer " + token.access_token;
+            request.SetHeader("User-Agent", appName);
+
+            request.Method = "POST";
+            request.ContentType = "text/json";
+
+            string json = "{\"name\":\"" + _name + "\"," +
+                          "\"description\":\"Created with CloudSphere\"}";
+            byte[] bytes = System.Text.UTF8Encoding.UTF8.GetBytes(json);
+            using (var reqStream = request.GetRequestStream())
+            {
+                reqStream.Write(bytes, 0, bytes.Length);
+            }
+
+            try
+            {
+                HttpWebResponse response = (HttpWebResponse)request.GetResponse();
+                if (response.StatusCode != HttpStatusCode.Created)
+                {
+                    ret.Error = true;
+                    ret.ErrorMessage = "The BaseCamp project couldn't be created!";
+                }
+            }
+            catch (WebException we)
+            {
+                ret.Error = true;
+
+                var errorResponse = we.Response as HttpWebResponse;
+                if (errorResponse != null && errorResponse.StatusCode == HttpStatusCode.Forbidden) 
+                {
+                    ret.Error = true;
+                    ret.ErrorMessage = "You do not have enough rights to create a new project!";
+                }
+                else
+                {
+                    // possibly not enough space left (507 Insufficient Storage)
+                    ret.ErrorMessage = "The BaseCamp project couldn't be created! Please check that the folder name is valid and you have enough storage to create it.";
+                }
+            }
+            return ret;
         }
     }
 }

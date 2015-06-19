@@ -1,58 +1,7 @@
-﻿//$(function initialize() {
-//    PageMethods.GetGridLayout(function (response) {
-
-        
-//        // get grid container
-//        var container = $(".gridster > ul");
-
-//        // render grid layout
-//        var cells = response.GridCells;
-//        cells.forEach(function(cell) {
-//            PageMethods.IsAuthCloud(cell.name, function (isAuth) {
-//                var gridcell = "<li id='gridCell" + cell.name + "' data-row='" + cell.row + "' data-col='" + cell.col +
-//                    "' data-sizex='" + cell.sizex + "' data-sizey='" + cell.sizey + "'>";
-
-//                if (!isAuth) {
-//                    gridcell += "<img id = '" + cell.name + "' class ='CloudIconNotLoggedIn' src='Images/" + cell.name + ".png' title='Click to sign in' />";
-//                } else {
-//                    // TODO: implement
-//                }
-
-//                gridcell += "</li>";
-//                //alert(gridcell);
-//                container.append(gridcell);
-//            });
-//        });
-//        //for (var i = 0, len = cells.length; i < len; i++) {
-//        //    PageMethods.IsAuthCloud(cells[i].name, function (isAuth) {
-//        //        var gridcell = "<li id='gridCell" + cells[i].name + "' data-row='" + cells[i].row + "' data-col='" + cells[i].col +
-//        //            "' data-sizex='" + cells[i].sizex + "' data-sizey='" + cells[i].sizey + "'>";
-
-//        //        if (!isAuth) {
-//        //            gridcell += "<img id = '" + cells[i].name + "' class ='CloudIconNotLoggedIn' src='Images/" + cells[i].name + ".png' title='Click to sign in' />";
-//        //        } else {
-//        //            // TODO: implement
-//        //        }
-
-//        //        gridcell += "</li>";
-//        //        container.append(gridcell);
-//        //    });
-//        //}
-
-//        //if (typeof gridcell != "undefined")
-//        //    container.append(gridcell);
-        
-//        var clouds = ["GoogleDrive", "OneDrive", "Dropbox", "Box", "SharePoint"]; //, "Device"];
-//        //clouds.forEach(ListContents);
-
-
-        
-//    });
-    
-//});
-
-var viewAsList = false;
-//var FoldersBreadcrumbs = new Array(6); // TODO fix ".." issue
+﻿var viewAsList = false;
+var FoldersBreadcrumbs = [];
+var cloudsArray = ["GoogleDrive", "OneDrive", "Dropbox", "Box", "SharePoint", "AmazonS3"]; //, "Device"];
+var cloudRootsArray = ["root", "me/skydrive/", "/", "0", "", "_"]; //, "Device"];
 
 $(function initialize() {
     //  initialize the global variables used for dialog windows
@@ -60,8 +9,6 @@ $(function initialize() {
 });
 
 $(document).ready(function () {
-    //alert("ready!");
-    
     if ($(".gridster").length > 0) {
 
         $(".CloudIconNotLoggedIn").click(function () {
@@ -76,9 +23,8 @@ $(document).ready(function () {
                             //OpenFromCloud(site); //what to do after logon
                         });
                     } else if (cloud.toLowerCase() == "amazons3") {
-                        var currentUrl = window.location.protocol + '//' + window.location.host + window.location.pathname;
-                        PageMethods.GetAmazonAuthenticationUrl(currentUrl, function (resp) {
-                            window.location.href = resp;
+                        AuthenticateAmazonDialog("open", function () {
+                            //OpenFromCloud(site); //what to do after logon
                         });
                     } else {
                         //jQuery(window).unbind("beforeunload");
@@ -88,12 +34,20 @@ $(document).ready(function () {
             });
         });
 
-        var clouds = ["GoogleDrive", "OneDrive", "Dropbox", "Box", "SharePoint", "AmazonS3"]; //, "Device"];
+        for (var i = 0; i < cloudsArray.length; i++) {
+            //if (FoldersBreadcrumbs.length < cloudsArray.length) { // initialize breadcrumbs array, only on first page access
+                var breadcumbsForCloud = [];
+                FoldersBreadcrumbs.push(breadcumbsForCloud);
+            //}
+            ListContents(cloudsArray[i], null);
+        }
 
-        //clouds.forEach(ListContents);
-        for (var i = 0; i < clouds.length; i++) {
-            //FoldersBreadcrumbs[i] = new Array(); // TODO fix ".." issue
-            ListContents(clouds[i], null);
+        if($("div.error")[0]){
+            createError($("div.error"));
+        }
+
+        if($("div.notice")[0]){
+            createHighlight($("div.notice"));
         }
     }
 
@@ -153,14 +107,24 @@ function ListContents(value, folderId) {
         var container = $('#gridCell' + value.toString());
 
         // remove existing items
-        container.find(".TableItems, .SwitchLayoutLink").remove();
+        container.find(".TableItems, .SwitchLayoutLink, .CloudMiniIcon").remove();
 
         // determine item width
         var width = container.width();
         var itemsPerLine = Math.round(width / 100);
         var itemWidth = Math.floor((width - 10) / itemsPerLine);
 
+        var cloudIndex = cloudsArray.indexOf(value);
+        //alert(cloudIndex);
+
         folderId = folderId || null;
+        if (folderId == null) {
+            folderId = cloudRootsArray[cloudIndex]; // initialize with root folder
+            FoldersBreadcrumbs[cloudIndex].push({
+                name: "/",
+                id: folderId
+            });
+        }
 
         container.attr("currentFolder", folderId);
 
@@ -171,8 +135,7 @@ function ListContents(value, folderId) {
         $.ajax({
             type: "POST",
             url: "../Default.aspx/ListFilesInFolder",
-            data: '{ "cloud" : "' + value + '" , "folderId" :' + JSON.stringify(folderId) + ', "extensions" : null}',
-            //data: { cloud:value, folderId:folderId, extensions:null },
+            data: '{ "cloud" : "' + value + '" , "folderId" :' + JSON.stringify(folderId) + '}',
             contentType: "application/json; charset=utf-8",
             dataType: "json",
             //dataType: "html",
@@ -200,16 +163,16 @@ function ListContents(value, folderId) {
             return;
         }
 
-        //PageMethods.ListFilesInFolder(value, null, null, function(response) {
-        //    alert(response.length);
-        //});
-        if (folderId != null && folderId != "null") {
-            var goBackFolder = { isFolder: true, Name: "..", Id: null, imageUrl: "Images/folderIcon_64x64.png" }; // TODO: support for list mode
+        if(folderId != cloudRootsArray[cloudIndex])
+        {
+            var goBackFolder = { isFolder: true, Name: "..", Id: "..", imageUrl: "Images/folderIcon_64x64.png" }; // TODO: support for list mode
             items.unshift(goBackFolder);
             itemsCount++;
         }
 
+        container.append("<img src='Images/" + value.toString().toLowerCase() + "_mini.png' class='CloudMiniIcon' style='position:relative; left:16px; width:32px; height:32px; display: inline-block; vertical-align: middle; margin-right:5px'/>");
         container.append("<a class='SwitchLayoutLink'>View as List</a>");
+        container.append("<a class='SwitchLayoutLink' onclick='return AddFolderDialog(&quot;" + value.toString() + "&quot;, &quot;" + folderId.replace(new RegExp("'", "g"), "&apos;") + "&quot;);'>Add Folder</a>");
 
         // TODO: optimization - this doesn't need to be retrieved with every listing (?)
         container.append("<span id='quota" + value + "' style='float:right; margin-right:3px; font-weight:bold; color:darkgray'></span>"); // TODO: add class for styles
@@ -228,7 +191,7 @@ function ListContents(value, folderId) {
         });
 
 
-        var table = $("<table id='" + value.toString() + "TableItems' class='TableItems' style='margin:20px 1% 0px; max-width: 98%; position:relative;'></table>");
+        var table = $("<table id='" + value.toString() + "TableItems' class='TableItems' style='margin:7px 1% 0px; max-width: 98%; position:relative;'></table>");
 
         var row = $("<tr></tr>");
         for (var k = 0; k < itemsCount; k++) {
@@ -240,7 +203,7 @@ function ListContents(value, folderId) {
                 "<div id='item" + k + value + "' cloud='" + value + "' style='text-align:center; max-width:" + (itemWidth - 1) + "px;'>";
             if (items[k].isFolder) {
                 cell += "<img fileId='" + id + "' class='FolderIcon' src='" + items[k].imageUrl + "' cloud='" + value + "' type='" + items[k].Type + "' " +
-                                                  "isBucket='" + items[k].isBucket + "'/></div>"; // bucket='" + items[k].bucketName + "'
+                                                  "isBucket='" + items[k].isBucket + "' name='" + items[k].Name +"'/></div>"; // bucket='" + items[k].bucketName + "'
             } else {
                 cell += "<img fileId='" + id + "' class='FileIcon' src='" + items[k].imageUrl + "' known='" + items[k].IsKnownType + "' cloud='" + value + "' type='" + items[k].Type + "' " +
                                                   "isBucket='" + items[k].isBucket + "'/></div>"; // bucket='" + items[k].bucketName + "'
@@ -267,8 +230,19 @@ function ListContents(value, folderId) {
         $(".FolderIcon").bind(
             'click', function (e) {
                 var cancelDefaultAction = CloseContextualMenu(e);
-                if (cancelDefaultAction != true)
-                    ListContents($($(this).parent()).attr("cloud"), $(this).attr("fileId"));
+                if (cancelDefaultAction != true) {
+                    var cid = $(this).attr("fileId");
+                    if (cid != "..") {
+                        FoldersBreadcrumbs[cloudIndex].push({
+                            name: $(this).attr("name"),
+                            id: cid
+                        });
+                        ListContents($($(this).parent()).attr("cloud"), cid);
+                    } else {
+                        FoldersBreadcrumbs[cloudIndex].pop();
+                        ListContents($($(this).parent()).attr("cloud"), FoldersBreadcrumbs[cloudIndex][FoldersBreadcrumbs[cloudIndex].length - 1].id);
+                    }
+                }
             }
         );
 
@@ -408,8 +382,25 @@ function ListContents(value, folderId) {
                 e.stopPropagation();
             }
         });
+
+        //$(".AddFolder").bind(
+        //    'click', function (e) {
+        //        var cancelDefaultAction = CloseContextualMenu(e);
+        //        if (cancelDefaultAction != true) {
+                    
+        //        }
+        //    }
+        //);
     }
 }
+
+//// TODO: DELETE!!!!!!!!!!!!!!!!!!!!!!!!!!
+//function addFolder(cloud, parentFolderId, folderName) {
+//    PageMethods.NewFolder(cloud, parentFolderId, folderName, function (response) {
+//        if (response.Error)
+//            showError(response.ErrorMessage);
+//    });
+//}
 
 function ShowContextualMenu(callingItem) {
     // close any existing contextual menu
@@ -537,11 +528,9 @@ function FolderDelete(callingItem) {
 }
 
 
-function ListFiles(container, cloudService, callback, saveMode, extensions, filename) {
+function ListFiles(container, cloudService, callback, saveMode, filename) {
     PageMethods.GetFilePickerLabels(saveMode, function (response) {
-        if (extensions == undefined)
-            extensions = null;
-
+        
         if (saveMode == undefined)
             saveMode = false;
 
@@ -708,7 +697,7 @@ function ListFiles(container, cloudService, callback, saveMode, extensions, file
 
         var list = function (folderId) {
             content.empty();
-            PageMethods.ListFilesInFolder(cloudService, folderId, extensions, function (files) {
+            PageMethods.ListFilesInFolder(cloudService, folderId, function (files) {
                 var breadCrumbsText = "";
                 for (var folder = 0; folder < FoldersBreadcrumbs.length; folder++)
                     breadCrumbsText += FoldersBreadcrumbs[folder].name + "\\";
@@ -832,4 +821,22 @@ function ListFiles(container, cloudService, callback, saveMode, extensions, file
 
         list(null); //null will get root folder contents
     });
+}
+
+function createHighlight(obj) {
+    obj.addClass('ui-state-highlight ui-corner-all');
+    obj.html('<p><span class="ui-icon ui-icon-alert" style="float: left; margin-right:.3em;"></span>' + obj.html() + '</p>');
+}
+
+function createError(obj) {
+    obj.addClass('ui-state-error ui-corner-all');
+    obj.html('<p><span class="ui-icon ui-icon-alert" style="float: left; margin-right:.3em;"></span>' + obj.html() + '</p>');
+}
+
+function showError(errorMessage) {
+    var errorDiv = $($("div.error")[0]);
+    errorDiv.find("#errorMessage").html("<b>ERROR:</b> " + errorMessage);
+    //errorDiv.show("highlight", { color: 'crimson' }, 100); // .slideDown("fast");
+    errorDiv.slideDown(500);
+    setTimeout(function () { errorDiv.slideUp(500); }, 4000);
 }

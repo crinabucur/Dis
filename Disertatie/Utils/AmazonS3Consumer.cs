@@ -19,9 +19,6 @@ namespace Disertatie.Utils
         public AmazonS3Consumer()
         {
             name = "AmazonS3";
-            //Amazon.Util.ProfileManager.RegisterProfile("crina", "AKIAIEXSQM2VUJMASPSQ", "txaULBobX4VE98w9EfnNsbveaAx/TNBTrcUJOViR"); // profileName, accessKey, secretKey
-            CreateClient("", "", "");
-            ListBuckets();
         }
 
         public bool CreateClient(string accessKey, string secretKey, string region)
@@ -30,10 +27,11 @@ namespace Disertatie.Utils
             {
                 RegionEndpoint regionEndpoint = RegionEndpoint.EnumerableAllRegions.FirstOrDefault(reg => reg.DisplayName == region);
                 _client = AWSClientFactory.CreateAmazonS3Client(accessKey, secretKey, regionEndpoint);
+                ListBuckets();
             }
             catch (Exception e)
             {
-                throw e;
+                return false;
             }
             return true;
         }
@@ -60,12 +58,12 @@ namespace Disertatie.Utils
             }
             catch (AmazonS3Exception amazonS3Exception)
             {
-                Debug.WriteLine("An error occurred when listing buckets! Code: {0}, message '{1}", amazonS3Exception.ErrorCode, amazonS3Exception.Message);
+                Debug.WriteLine("An error occurred while listing the buckets! Error code: {0}, message '{1}", amazonS3Exception.ErrorCode, amazonS3Exception.Message);
             }
             return ret;
         } 
 
-        public override List<CloudItem> ListFilesInFolder(string folderId, IEnumerable<string> fileExtensions)
+        public override List<CloudItem> ListFilesInFolder(string folderId)
         {
             if (folderId == getRootFolderId())
                 return ListBuckets();
@@ -130,7 +128,7 @@ namespace Disertatie.Utils
             {
                 var item = new CloudItem
                 {
-                    Id = entry.Key, // ETag
+                    Id = entry.Key,
                     Name = entry.Key.TrimEnd('/'),
                     isFolder = true,
                     lastEdited = entry.LastModified.ToString(),
@@ -144,7 +142,7 @@ namespace Disertatie.Utils
             {
                 var item = new CloudItem
                 {
-                    Id = entry.Key, // ETag
+                    Id = entry.Key,
                     Name = entry.Key,
                     lastEdited = entry.LastModified.ToString(),
                     cloudConsumer = name
@@ -297,6 +295,11 @@ namespace Disertatie.Utils
             // TODO: manage non-empty bucket case
             
             return true;
+        }
+
+        public override ResponsePackage AddFolder(string parentFolderId, string _name)
+        {
+            throw new NotImplementedException();
         }
     }
 }

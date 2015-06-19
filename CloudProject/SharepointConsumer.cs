@@ -23,7 +23,7 @@ namespace CloudProject
 			name = "SharePoint";
 		}
 
-        public override List<CloudItem> ListFilesInFolder(string folderId, IEnumerable<string> fileExtensions)
+        public override List<CloudItem> ListFilesInFolder(string folderId)
         {
             string uri;
             if (folderId == getRootFolderId())
@@ -459,6 +459,67 @@ namespace CloudProject
                if (request!= null) request.Abort();
             }
             return true;
+        }
+
+        public override ResponsePackage AddFolder(string parentFolderId, string _name)
+        {
+//            url: http://site url/_api/web/folders
+//            method: POST
+//            body: { '__metadata': { 'type': 'SP.Folder' }, 'ServerRelativeUrl': '/document library relative url/folder name'}
+//            Headers: 
+//    Authorization: "Bearer " + accessToken
+//    X-RequestDigest: form digest value
+//    accept: "application/json;odata=verbose"
+//    content-type: "application/json;odata=verbose"
+//    content-length:length of post body
+
+            var ret = new ResponsePackage();
+            HttpWebRequest request = null;
+            try
+            {
+                //if (parentFolderId.EndsWith("/RootFolder/Files", StringComparison.OrdinalIgnoreCase))
+                //{
+                //    var regex = new Regex("/RootFolder/Files", RegexOptions.IgnoreCase);
+                //    parentFolderId = regex.Replace(parentFolderId, "");
+                //}
+                //else 
+                    if (parentFolderId.EndsWith("/Files", StringComparison.OrdinalIgnoreCase))
+                {
+                    var regex = new Regex("/Files", RegexOptions.IgnoreCase);
+                    parentFolderId = regex.Replace(parentFolderId, "");
+                }
+
+                // Get Request Digest token
+                string formDigestValue = GetFormDigestToken();
+
+                request = (HttpWebRequest)WebRequest.Create(config.authorizeUri + "/_api/web/folders");
+                request.CookieContainer = new CookieContainer();
+                request.CookieContainer.Add(new Uri("http://" + FedAuth.Domain), FedAuth);
+                if (rtFa != null) request.CookieContainer.Add(new Uri("http://" + rtFa.Domain), rtFa);
+                request.Method = "POST";
+                request.Headers["X-RequestDigest"] = formDigestValue;
+                request.Accept = "application/json;odata=verbose";
+
+                string json = "[{\"__metadata\":[\"type\":\"SP.Folder\"], \"ServerRelativeUrl\":\"" + parentFolderId.Replace(config.authorizeUri, "") + "/" + _name + "\"}]";
+
+                byte[] bytes = System.Text.UTF8Encoding.UTF8.GetBytes(json);
+                using (var reqStream = request.GetRequestStream())
+                {
+                    reqStream.Write(bytes, 0, bytes.Length);
+                }
+
+                request.GetResponse();
+            }
+            catch
+            {
+                ret.Error = true;
+                ret.ErrorMessage = "The folder couldn't be created!";
+            }
+            finally
+            {
+                if (request != null) request.Abort();
+            }
+            return ret;
         }
 
         public override string GenerateShareUrlParam (CloudItem item)

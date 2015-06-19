@@ -318,7 +318,11 @@
     <Content Include="Content\jquery.gridster.css" />
     <Content Include="Content\Site.css" />
     <Content Include="Content\themes\base\images\bg-noise.jpg" />
+    <Content Include="Content\themes\base\jquery-ui.css" />
     <Content Include="Images\AmazonS3.png" />
+    <Content Include="Images\amazons3_mini.png" />
+    <Content Include="Images\box_mini.png" />
+    <Content Include="Images\dropbox_mini.png" />
     <Content Include="Images\dynatree_icons.gif" />
     <Content Include="Content\themes\base\images\page-bkg.jpg" />
     <Content Include="Content\themes\base\images\ui-bg_flat_0_aaaaaa_40x100.png" />
@@ -334,7 +338,6 @@
     <Content Include="Content\themes\base\images\ui-icons_454545_256x240.png" />
     <Content Include="Content\themes\base\images\ui-icons_888888_256x240.png" />
     <Content Include="Content\themes\base\images\ui-icons_cd0a0a_256x240.png" />
-    <Content Include="Content\themes\base\jquery-ui-1.11.4.css" />
     <Content Include="Content\themes\base\jquery.ui.accordion.css" />
     <Content Include="Content\themes\base\jquery.ui.all.css" />
     <Content Include="Content\themes\base\jquery.ui.autocomplete.css" />
@@ -406,10 +409,12 @@
     <Content Include="Images\File Icons\zip.png" />
     <Content Include="Images\folderIcon_64x64.png" />
     <Content Include="Images\googleDrive.png" />
+    <Content Include="Images\googledrive_mini.png" />
     <Content Include="Images\heroAccent.png" />
     <Content Include="Images\loader.gif" />
     <Content Include="Images\logo.png" />
     <Content Include="Images\oneDrive.png" />
+    <Content Include="Images\onedrive_mini.png" />
     <Content Include="Images\orderedList0.png" />
     <Content Include="Images\orderedList1.png" />
     <Content Include="Images\orderedList2.png" />
@@ -424,6 +429,7 @@
     <Content Include="favicon.ico" />
     <Content Include="Global.asax" />
     <Content Include="Images\sharepoint.png" />
+    <Content Include="Images\sharepoint_mini.png" />
     <Content Include="Images\unknownIcon_64x64.png" />
     <Content Include="packages.config" />
     <Content Include="Handlers\AjaxFileHandler.ashx" />
@@ -707,6 +713,7 @@
     <Content Include="Pdf\web\locale\zh-TW\viewer.properties" />
     <Content Include="Pdf\web\locale\zu\viewer.properties" />
     <Content Include="Handlers\pdf.ashx" />
+    <None Include="Properties\PublishProfiles\pub.pubxml" />
     <None Include="Scripts\jquery-1.8.2.intellisense.js" />
     <Content Include="Pdf\build\pdf.js" />
     <Content Include="Pdf\build\pdf.worker.js" />
@@ -798,7 +805,7 @@
     <Content Include="Scripts\functions.js" />
     <Content Include="Scripts\jquery-1.8.2.js" />
     <Content Include="Scripts\jquery-1.8.2.min.js" />
-    <Content Include="Scripts\jquery-ui-1.11.4.js" />
+    <Content Include="Scripts\jquery-ui.js" />
     <Content Include="Scripts\jquery.blockUI.js" />
     <Content Include="Scripts\jquery.collision.js" />
     <Content Include="Scripts\jquery.coords.js" />
