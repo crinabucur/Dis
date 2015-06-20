@@ -102,7 +102,7 @@ function setCookie(cname, cvalue, exdays) {
 }
 
 function ListContents(value, folderId) {
-    if ($("#" + value.toString()).length == 0) { // if the cloud is logged in and the page is Default
+    if ($("#" + value.toString()).length == 0 || !($("#" + value.toString()).is(":visible"))) { // if the cloud is logged in and the page is Default
 
         var container = $('#gridCell' + value.toString());
 
@@ -120,6 +120,10 @@ function ListContents(value, folderId) {
         folderId = folderId || null;
         if (folderId == null) {
             folderId = cloudRootsArray[cloudIndex]; // initialize with root folder
+
+            // empty the array
+            FoldersBreadcrumbs[cloudIndex] = [];
+
             FoldersBreadcrumbs[cloudIndex].push({
                 name: "/",
                 id: folderId
@@ -173,9 +177,12 @@ function ListContents(value, folderId) {
         container.append("<img src='Images/" + value.toString().toLowerCase() + "_mini.png' class='CloudMiniIcon' style='position:relative; left:16px; width:32px; height:32px; display: inline-block; vertical-align: middle; margin-right:5px'/>");
         container.append("<a class='SwitchLayoutLink'>View as List</a>");
         container.append("<a class='SwitchLayoutLink' onclick='return AddFolderDialog(&quot;" + value.toString() + "&quot;, &quot;" + folderId.replace(new RegExp("'", "g"), "&apos;") + "&quot;);'>Add Folder</a>");
+        container.append("<a class='SwitchLayoutLink' onclick='return SignOut(&quot;" + value.toString() + "&quot;)'>LogOut</a>");
+        //container.append("<img src='Images/gridIcon.png'/>");
+        //container.append("<img src='Images/listIcon.png'/ style='margin-left:5px;'>");
 
         // TODO: optimization - this doesn't need to be retrieved with every listing (?)
-        container.append("<span id='quota" + value + "' style='float:right; margin-right:3px; font-weight:bold; color:darkgray'></span>"); // TODO: add class for styles
+        container.append("<span class='Quota' id='quota" + value + "' style='float:right; margin-right:3px; font-weight:bold; color:darkgray'></span>"); // TODO: add class for styles
 
         $.ajax({
             type: "POST",
@@ -300,17 +307,6 @@ function ListContents(value, folderId) {
 
                 //var presenting = $("<img id='presenting' style='text-align:center; max-width:100%; max-height:100%; position:absolute; top:50%; left:50%; display:none;' src='Handlers/jpg.ashx?fileId=" + fileId + "&cloud=" + cloud + "'/>");
 
-                //$.ajax({
-                //    url: 'Handlers/jpg.ashx',
-                //    type: 'GET',
-                //    //data: { method: 'GreetMe', args: { name: 'AlexCode' } },
-                //    success: function (data) {
-                //        var video = $("<img src='Handlers/jpg.ashx' style='text-align:center; position:relative;' />");
-                //        $('.blockUI.blockMsg.blockPage').append(video);
-                //        $('.blockUI.blockMsg.blockPage').width(video.width());
-                //    }
-                //});
-
                 if (typeof presenting != "undefined") {
                     $.blockUI({
                         css: {
@@ -393,14 +389,6 @@ function ListContents(value, folderId) {
         //);
     }
 }
-
-//// TODO: DELETE!!!!!!!!!!!!!!!!!!!!!!!!!!
-//function addFolder(cloud, parentFolderId, folderName) {
-//    PageMethods.NewFolder(cloud, parentFolderId, folderName, function (response) {
-//        if (response.Error)
-//            showError(response.ErrorMessage);
-//    });
-//}
 
 function ShowContextualMenu(callingItem) {
     // close any existing contextual menu
@@ -525,6 +513,37 @@ function FolderDelete(callingItem) {
             ListContents(cloud, currentFolder);
         });
     }
+}
+
+function SignOut(cloudName) {
+    PageMethods.SignOut(cloudName, function (logOutUrl) {
+        var cloud = cloudName.toLowerCase();
+        if (cloud == "basecamp" || cloud == "sharepoint" || cloud == "onedrive") {
+            callLogOutIframe(logOutUrl, function () {
+                $('iframe#logOutIframe').remove();
+                $('#' + cloudName).show();
+                var container = $('#gridCell' + cloudName.toString());
+                container.find(".TableItems, .SwitchLayoutLink, .CloudMiniIcon, .Quota").remove(); // remove existing items
+            }); 
+        }
+        else {
+            $('#' + cloudName).show();
+            var container = $('#gridCell' + cloudName.toString());
+            container.find(".TableItems, .SwitchLayoutLink, .CloudMiniIcon, .Quota").remove(); // remove existing items
+        }
+    });
+}
+
+function callLogOutIframe(url, callback) {
+    if (url.lastIndexOf("https://login.live.com", 0) === 0) {
+        url = decodeURIComponent(url) + "&redirect_uri=" + window.location;
+    }
+    $(document.body).append('<iframe id="logOutIframe" style="display:none"></iframe>');
+    $('iframe#logOutIframe').attr('src', url);
+
+    $('iframe#logOutIframe').load(function () {
+        callback(this);
+    });
 }
 
 

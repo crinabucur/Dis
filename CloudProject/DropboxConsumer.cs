@@ -87,6 +87,17 @@ namespace CloudProject
             throw new NotImplementedException();
         }
 
+        public override string GetLogOutEndpoint()
+        {
+            const string logOutUrl = "https://www.dropbox.com/logout";
+
+            token.access_token = null;
+            token.refresh_token = null;
+            userData = null;
+
+            return logOutUrl;
+        }
+
         public override CloudFileData GetDocument(CloudItem item)
         {
             actualFileId = item.Id;

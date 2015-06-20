@@ -279,27 +279,92 @@ namespace Disertatie.Utils
 
         public override void DeleteFile(string fileId)
         {
-             DeleteFolder(fileId);
+            DeleteObjectRequest deleteObjectRequest = new DeleteObjectRequest
+            {
+                BucketName = _currentBucket,
+                Key = fileId
+            };
+
+            _client.DeleteObject(deleteObjectRequest);
         }
 
         public override bool DeleteFolder(string folderId)
         {
-            DeleteObjectRequest deleteObjectRequest = new DeleteObjectRequest
+            if (_currentBucket != "")
             {
-                BucketName = _currentBucket,
-                Key = folderId
-            };
+                // this is a folder
+                ListObjectsRequest request = new ListObjectsRequest();
+                request.BucketName = _currentBucket;
+                request.Prefix = folderId;
+                ListObjectsResponse response = _client.ListObjects(request);
 
-            _client.DeleteObject(deleteObjectRequest);
+                List<KeyVersion> listOfKeys = new List<KeyVersion>();
 
-            // TODO: manage non-empty bucket case
-            
-            return true;
+                foreach (S3Object entry in response.S3Objects)
+                {
+                    listOfKeys.Add(new KeyVersion { Key = entry.Key, VersionId = null});
+                }
+
+                DeleteObjectsRequest multiObjectDeleteRequest = new DeleteObjectsRequest
+                {
+                    BucketName = _currentBucket,
+                    Objects = listOfKeys // This includes the object keys and null version IDs.
+                };
+
+                try
+                {
+                    DeleteObjectsResponse resp = _client.DeleteObjects(multiObjectDeleteRequest);
+                    Console.WriteLine("Successfully deleted all {0} items", resp.DeletedObjects.Count);
+                    return true;
+                }
+                catch (DeleteObjectsException e)
+                {
+                    return false;
+                }
+            }
+            else
+            {
+                // this is a bucket (it cannot be deleted unless empty)
+                ListObjectsRequest request = new ListObjectsRequest { BucketName = folderId };
+                ListObjectsResponse response = _client.ListObjects(request);
+
+                List<KeyVersion> listOfKeys = new List<KeyVersion>();
+
+                foreach (S3Object entry in response.S3Objects)
+                {
+                    listOfKeys.Add(new KeyVersion { Key = entry.Key, VersionId = null });
+                }
+
+                DeleteObjectsRequest multiObjectDeleteRequest = new DeleteObjectsRequest
+                {
+                    BucketName = folderId,
+                    Objects = listOfKeys // This includes the object keys and null version IDs.
+                };
+
+                try
+                {
+                    DeleteObjectsResponse resp = _client.DeleteObjects(multiObjectDeleteRequest);
+                    Console.WriteLine("Successfully deleted all {0} items", resp.DeletedObjects.Count);
+
+                    DeleteBucketResponse res = _client.DeleteBucket(folderId);
+                    return true;
+                }
+                catch (DeleteObjectsException e)
+                {
+                    return false;
+                }
+            }
         }
 
         public override ResponsePackage AddFolder(string parentFolderId, string _name)
         {
             throw new NotImplementedException();
+        }
+
+        public override string GetLogOutEndpoint()
+        {
+            _client = null;
+            return "";
         }
     }
 }

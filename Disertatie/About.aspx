@@ -8,7 +8,7 @@
 
     <article>
         <p style="width:513px; text-align: justify; text-justify: inter-word;">        
-            CloudSphere is a project I developed for my master thesis. It was designed as a universal platform that integrates major cloud storage services and allows managing files and directories within these services, as well as inter-cloud transfers.
+            CloudSphere is a project I developed for my Software Engineering master thesis. It was designed as a universal platform that integrates major cloud storage services and allows managing files and directories within these services, as well as inter-cloud transfers.
         </p>
 
         <p style="width:513px; text-align: justify; text-justify: inter-word;">        

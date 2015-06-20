@@ -522,6 +522,19 @@ namespace CloudProject
             return ret;
         }
 
+        public override string GetLogOutEndpoint()
+        {
+            const string logOutUrl = "https://login.microsoftonline.com/logout.srf?wa=wsignoutcleanup1.0";
+
+            token.access_token = null;
+            config.authorizeUri = null;
+            userData = null;
+            FedAuth = null;
+            rtFa = null;
+
+            return logOutUrl;
+        }
+
         public override string GenerateShareUrlParam (CloudItem item)
 		{
 		    string filePath = item.Id.Replace(config.authorizeUri, "");

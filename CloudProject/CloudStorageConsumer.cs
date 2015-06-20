@@ -158,6 +158,7 @@ namespace CloudProject
 	    public abstract void DeleteFile(string fileId);
         public abstract bool DeleteFolder(string folderId);
         public abstract ResponsePackage AddFolder(string parentFolderId, string _name);
+        public abstract string GetLogOutEndpoint(); 
 
         /// <summary>
         /// A version of the GetDocument method which returns a CloudFileData - a convenient way to stick file metadata and content stream together

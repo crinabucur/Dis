@@ -360,5 +360,16 @@ namespace CloudProject
             }
             return ret;
         }
+
+        public override string GetLogOutEndpoint()
+        {
+            string logOutUrl = "https://accounts.google.com/o/oauth2/revoke?token=" + token.access_token;  // "https://accounts.google.com/logout";
+
+            token.access_token = null;
+            token.refresh_token = null;
+            userData = null;
+
+            return logOutUrl;
+        } 
     }
 }

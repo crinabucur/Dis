@@ -1316,8 +1316,12 @@
 
         // CCB 22.03.2015
         var widget = $(this.$resized_widget[0]);
-        widget.append("<img src='Images/loader.gif' class='Loader' />");
-        ListContents(widget.attr("id").replace("gridCell", ""), widget.attr("currentFolder")); // TODO: optimize this; no need to retrieve all the items again, just rearrange them. (+ folder remembering advantage)
+        var id = widget.attr("id");
+        var cloud = id.replace("gridCell", "");
+        var cloudimage = widget.find(($("#" + cloud)));
+        if (cloudimage.length < 1 || !cloudimage.is(":visible"))
+            widget.append("<img src='Images/loader.gif' class='Loader' />");
+        ListContents(cloud, widget.attr("currentFolder")); // TODO: optimize this; no need to retrieve all the items again, just rearrange them.
         SetLayoutCookie();
     };
 

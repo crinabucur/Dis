@@ -239,6 +239,12 @@ namespace Disertatie
             BoxConsumer consumer = HttpContext.Current.Session[cloud.ToLower() + "Consumer"] as BoxConsumer;
             return consumer.MoveFilesAndFolders(ids, newParentId);
         }
+
+        [WebMethod]
+        public static string SignOut(string cloudService)
+        {
+            return (HttpContext.Current.Session[cloudService.ToLower() + "Consumer"] as CloudStorageConsumer).GetLogOutEndpoint();
+        }
         #endregion Clouds integration
 
         [WebMethod]

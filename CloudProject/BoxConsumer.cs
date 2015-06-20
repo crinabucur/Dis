@@ -334,9 +334,8 @@ namespace CloudProject
                 HttpWebResponse response = (HttpWebResponse) request.GetResponse();
                 if (response.StatusCode != HttpStatusCode.Created)
                 {
-                    //ret.Error = true;
-                    //ret.ErrorMessage = "The folder couldn't be created! Box only allows folder names with less than 256 characters, that do not contain " +
-                    //                   "trailing spaces, '/', '\' and the special names '.' and '..'!";
+                    ret.Error = true;
+                    ret.ErrorMessage = "The folder couldn't be created! An error has occurred.";
                 }
             }
             catch(WebException we)
@@ -357,6 +356,17 @@ namespace CloudProject
             }
             return ret;
         }
+
+        public override string GetLogOutEndpoint()
+        {
+            const string logOutUrl = "https://app.box.com/logout"; // "https://api.box.com/oauth2/revoke"
+
+            token.access_token = null;
+            token.refresh_token = null;
+            userData = null;
+
+            return logOutUrl;
+        } 
 
         public bool MoveFilesAndFolders(List<string> ids, string newParentId)
         {

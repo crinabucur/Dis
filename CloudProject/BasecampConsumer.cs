@@ -27,21 +27,33 @@ namespace CloudProject
         private List<CloudItem> getProjects()
         {
             List<CloudItem> ret = new List<CloudItem>();
-            string url = string.Format("https://basecamp.com/{0}/api/v1/projects.json", accountId);
-            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
-            request.Headers["Authorization"] = "Bearer " + token.access_token;
-            request.SetHeader("User-Agent", appName);
-            var retVal = JArray.Parse(new StreamReader(request.GetResponse().GetResponseStream()).ReadToEnd());
 
-            foreach (JObject obj in retVal)
+            try
             {
-                ret.Add(new CloudItem()
+                string url = string.Format("https://basecamp.com/{0}/api/v1/projects.json", accountId);
+                HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
+                request.Headers["Authorization"] = "Bearer " + token.access_token;
+                request.SetHeader("User-Agent", appName);
+                var retVal = JArray.Parse(new StreamReader(request.GetResponse().GetResponseStream()).ReadToEnd());
+
+                foreach (JObject obj in retVal)
                 {
-                    Id = obj["id"].ToString(),
-                    cloudConsumer = this.name,
-                    isFolder = true,
-                    Name = obj["name"].ToString()
-                });
+                    ret.Add(new CloudItem()
+                    {
+                        Id = obj["id"].ToString(),
+                        cloudConsumer = this.name,
+                        isFolder = true,
+                        Name = obj["name"].ToString()
+                    });
+                }
+            }
+            catch (WebException e)
+            {
+                if (((HttpWebResponse)e.Response).StatusCode == HttpStatusCode.NotFound) // the account's trial period has expired!
+                {
+                    GetLogOutEndpoint();
+                    return null;
+                }
             }
 
             return ret;
@@ -238,6 +250,18 @@ namespace CloudProject
                 }
             }
             return ret;
+        }
+
+        public override string GetLogOutEndpoint()
+        {
+            const string logOutUrl = "https://launchpad.37signals.com/signout";
+
+            token.access_token = null;
+            token.refresh_token = null;
+            userData = null;
+            accountId = null;
+
+            return logOutUrl;
         }
     }
 }

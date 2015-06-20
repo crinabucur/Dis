@@ -90,7 +90,7 @@
         <div class="content-wrapper">
             <div class="float-left">
                 <p class="site-title">
-                    <a runat="server" href="~/">your logo here</a>
+                    <a runat="server" href="~/Default"><img alt="logo" src="Images/logo.png" style="width:377px; height:120px"/></a>
                 </p>
             </div>
             <div class="float-right">

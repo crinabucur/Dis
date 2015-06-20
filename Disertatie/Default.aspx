@@ -41,70 +41,23 @@
     
     <div class="gridster" style="top:10px;">
     <ul>
-        <%--<li id="gridCellGoogleDrive" data-row="1" data-col="1" data-sizex="2" data-sizey="2">
-            <div class="dragHandle"></div>
-            <%if (!IsAuthCloud("googledrive"))  
-              {%> 
-                <img id="GoogleDrive" class="CloudIconNotLoggedIn" src="Images/googleDrive.png" title="Click to sign in" />
-            <%} else {%>
-            <%               }%> 
-        </li>
-        <li id="gridCellOneDrive" data-row="1" data-col="3" data-sizex="2" data-sizey="2">
-            <div class="dragHandle"></div>
-            <%if (!IsAuthCloud("onedrive"))  
-              {%> 
-                <img id="OneDrive" class="CloudIconNotLoggedIn" src="Images/oneDrive.png" title="Click to sign in" />
-            <%}%>
-        </li>
-        <li id="gridCellSharePoint" data-row="1" data-col="5" data-sizex="2" data-sizey="2">
-            <div class="dragHandle"></div>
-            <%if (!IsAuthCloud("sharepoint"))  
-              {%> 
-                <img id="SharePoint" class="CloudIconNotLoggedIn" src="Images/sharepoint.png" title="Click to sign in" />
-            <%}%>
-        </li>
-
-        <li id="gridCellDropbox" data-row="3" data-col="1" data-sizex="2" data-sizey="2">
-            <div class="dragHandle"></div>
-            <%if (!IsAuthCloud("dropbox"))  
-              {%> 
-                <img id="Dropbox" class="CloudIconNotLoggedIn" src="Images/dropbox.png" title="Click to sign in" />
-            <%}%>
-        </li>
-        <li id="gridCellBox" data-row="3" data-col="3" data-sizex="2" data-sizey="2">
-            <div class="dragHandle"></div>
-            <%if (!IsAuthCloud("box"))  
-              {%> 
-                <img id="Box" class="CloudIconNotLoggedIn" src="Images/box.png" title="Click to sign in" />
-            <%}%>
-        </li>
-        <li id="gridCellDevice" data-row="3" data-col="5" data-sizex="2" data-sizey="2">
-            <div class="dragHandle"></div>
-            <div id="fileUploadDiv" style="overflow-x:hidden; overflow-y:auto;">
-                <%--TODO: find a solution
-            </div>
-        </li>--%>
-        
         <% foreach (var cell in GetGridLayout().GridCells)
            {%>
-                <%--<li id="gridCellGoogleDrive" data-row="1" data-col="1" data-sizex="2" data-sizey="2">
-            <div class="dragHandle"></div>
-            <%if (!IsAuthCloud("googledrive"))  
-              {%> 
-                <img id="GoogleDrive" class="CloudIconNotLoggedIn" src="Images/googleDrive.png" title="Click to sign in" />
-            <%} else {%>--%>
-
                <li id="gridCell<%= cell.name %>" data-row="<%= cell.row %>" data-col="<%= cell.col %>" data-sizex="<%= cell.sizex %>" data-sizey="<%= cell.sizey %>">
                    <div class="dragHandle"></div>
                    <% if (!IsAuthCloud(cell.name))
                       {%>
                           <img id="<%= cell.name %>" class="CloudIconNotLoggedIn" src="Images/<%= cell.name %>.png" title="Click to sign in" />
-                     <% } else if (cell.name != "Device") { %> <img src="Images/loader.gif" class="Loader" /> <%}%>
+                     <% } else 
+                        { %>
+                          <img id="<%= cell.name %>" class="CloudIconNotLoggedIn" src="Images/<%= cell.name %>.png" title="Click to sign in" style="display:none"/>
+                          <%if (cell.name != "Device") { %> <img src="Images/loader.gif" class="Loader" />
+                     <%}
+                    }%>
                </li>
           <% }%>
     </ul>
     </div>
-    <%--<video controls=""><source type="video/mp4" src="Handlers/mp4.asmx/ProcessRequest"></video>--%>
     
     <script type="text/javascript">
         if ('<%= Session["backFromAuth"] %>' != '') {
@@ -131,24 +84,6 @@
             }
         }).data('gridster');
 
-        //$(".CloudIconNotLoggedIn").click(function () {
-        //    var cloud = this.id;
-        //    PageMethods.IsAuthCloud(cloud, function (response) {
-        //        if (response) {
-        //            alert("logged in!");
-        //        }
-        //        else {
-        //            if (this.id.toLowerCase() == "sharepoint")
-        //                AuthenticateSharepointDialog("open", function () {
-        //                    OpenFromCloud(site); //what to do after logon
-        //                });
-        //            else {
-        //            jQuery(window).unbind("beforeunload");
-        //            window.location.href = " Dialogs/AuthenticateCloudService.aspx?cloud=" + cloud + "&action=open";
-        //            }
-        //        }
-        //    });
-        //});
     </script>
     <script>
         <%--$(function() {

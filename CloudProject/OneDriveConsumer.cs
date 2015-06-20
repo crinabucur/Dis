@@ -265,5 +265,16 @@ namespace CloudProject
             }
             return ret;
         }
+
+        public override string GetLogOutEndpoint()
+        {
+            string logOutUrl = "https://login.live.com/oauth20_logout.srf?wa=wsignin1.0&client_id=" + config.appKey;   // https://login.live.com/logout.srf?wa=wsignin1.0&ru=https://onedrive.live.com/handlers/Signout.mvc?service=Live.Folders
+
+            token.access_token = null;
+            token.refresh_token = null;
+            userData = null;
+
+            return logOutUrl; // the redirect_uri parameter needs to be added
+        }
     }
 }

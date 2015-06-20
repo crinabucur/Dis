@@ -179,7 +179,7 @@ function AuthenticateAmazonDialog(cloudActionOnOffice365Redirect, callback) {
         $('#awsform').submit(function (e) {
             e.preventDefault();
             PageMethods.AuthenticateAmazonS3(this.access.value, this.secret.value, this.region.value, function (resp) {
-                $("#AmazonS3").remove();
+                $("#AmazonS3").hide();
                 ListContents("AmazonS3", null);
                 CloseModalDialog();
             });
@@ -316,12 +316,6 @@ function AddFolderDialog(cloud, parentFolderId) {
             var foldername = ($("#foldername") != undefined) ? $("#foldername").val() : "";
 
             if (foldername != "") {
-                //PageMethods.NewFolder(cloud, parentFolderId, foldername, function (response) {
-                //    if (response.Error)
-                //        showError(response.ErrorMessage);
-                //    else ListContents(cloud, parentFolderId);
-                //    CloseModalDialog();
-                //});
 
                 var success = false;
                 var resp;
