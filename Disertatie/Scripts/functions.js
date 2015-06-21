@@ -174,7 +174,7 @@ function ListContents(value, folderId) {
             itemsCount++;
         }
 
-        container.append("<img src='Images/" + value.toString().toLowerCase() + "_mini.png' class='CloudMiniIcon' style='position:relative; left:16px; width:32px; height:32px; display: inline-block; vertical-align: middle; margin-right:5px'/>");
+        container.append("<img src='Images/" + value.toString().toLowerCase() + "_mini.png' class='CloudMiniIcon'/>");
         container.append("<a class='SwitchLayoutLink'>View as List</a>");
         container.append("<a class='SwitchLayoutLink' onclick='return AddFolderDialog(&quot;" + value.toString() + "&quot;, &quot;" + folderId.replace(new RegExp("'", "g"), "&apos;") + "&quot;);'>Add Folder</a>");
         container.append("<a class='SwitchLayoutLink' onclick='return SignOut(&quot;" + value.toString() + "&quot;)'>LogOut</a>");
@@ -182,7 +182,7 @@ function ListContents(value, folderId) {
         //container.append("<img src='Images/listIcon.png'/ style='margin-left:5px;'>");
 
         // TODO: optimization - this doesn't need to be retrieved with every listing (?)
-        container.append("<span class='Quota' id='quota" + value + "' style='float:right; margin-right:3px; font-weight:bold; color:darkgray'></span>"); // TODO: add class for styles
+        container.append("<span class='Quota' id='quota" + value + "'></span>"); // TODO: add class for styles
 
         $.ajax({
             type: "POST",
@@ -255,7 +255,7 @@ function ListContents(value, folderId) {
 
         $(".FileIcon").bind('click', function (e) {
             var cancelDefaultAction = CloseContextualMenu(e);
-            if (cancelDefaultAction != true) {
+            //if (cancelDefaultAction != true) {
                 var fileId = $(this).attr("fileId");
                 var cloud = $(this).attr("cloud");
 
@@ -297,6 +297,37 @@ function ListContents(value, folderId) {
                             //});
 
                             doNotResize = true;
+                            break;
+                        }
+                    case "text":
+                        {
+                            presenting = $("<iframe id='presenting' allowtransparency='false' style='text-align:center; width:1706px; max-width:100%; height:904px; max-height:98%; position:absolute; top:50%; left:50%; display:none; background-color:white' src='Handlers/txt.ashx?fileId=" + fileId + "&cloud=" + cloud + "'/>");
+                            break;
+                        }
+                    case "doc":
+                        {
+                            presenting = $("<object width='100%' height='864px' data='Handlers/doc.ashx?fileId=" + fileId + "&cloud=" + cloud + "' style='cursor:wait!important;' type='application/pdf'>" +
+                                    "<embed src='Handlers/doc.ashx?fileId=" + fileId + "&cloud=" + cloud + "' type='application/pdf' style='cursor:wait!important;>" +
+                                        "<noembed>Your browser does not support embedded PDF files. </noembed>" +
+                                        //"<img src='Images/loader.gif'/>" +
+                                    "</embed>" +
+                                "</object>");
+
+
+                            //presenting = $("<iframe id='presenting' allowtransparency='false' style='text-align:center; width:1706px; max-width:100%; height:904px; max-height:98%; position:absolute; top:50%; left:50%; display:none; background-color:white' src='Handlers/doc.ashx?fileId=" + fileId + "&cloud=" + cloud + "'/>");
+                            break;
+                        }
+                    case "docx":
+                        {
+                            presenting = $("<object width='100%' height='864px' data='Handlers/docx.ashx?fileId=" + fileId + "&cloud=" + cloud + "' style='cursor:wait!important;' type='application/pdf'>" +
+                                    "<embed src='Handlers/docx.ashx?fileId=" + fileId + "&cloud=" + cloud + "' type='application/pdf' style='cursor:wait!important;>" +
+                                        "<noembed>Your browser does not support embedded PDF files. </noembed>" +
+                                        //"<img src='Images/loader.gif'/>" +
+                                    "</embed>" +
+                                "</object>");
+
+
+                            //presenting = $("<iframe id='presenting' allowtransparency='false' style='text-align:center; width:1706px; max-width:100%; height:904px; max-height:98%; position:absolute; top:50%; left:50%; display:none; background-color:white' src='Handlers/docx.ashx?fileId=" + fileId + "&cloud=" + cloud + "'/>");
                             break;
                         }
                     case "unknown":
@@ -346,7 +377,7 @@ function ListContents(value, folderId) {
                         $('.blockUI.blockMsg.blockPage').css('cursor', 'default');
                     }
                 }
-            }
+            //}
         });
 
         // Cells (folders, files) events - in grid layout only
@@ -378,15 +409,6 @@ function ListContents(value, folderId) {
                 e.stopPropagation();
             }
         });
-
-        //$(".AddFolder").bind(
-        //    'click', function (e) {
-        //        var cancelDefaultAction = CloseContextualMenu(e);
-        //        if (cancelDefaultAction != true) {
-                    
-        //        }
-        //    }
-        //);
     }
 }
 
@@ -403,15 +425,19 @@ function ShowContextualMenu(callingItem) {
 
     // construct contextual menu depending on item type
     if (type.toLowerCase() == "file") {
-        options = (callingItem.attr("known") == "true") ? "<li>Preview</li>" : "<li class='ui-state-disabled'>Preview</li>";
+        options = (callingItem.attr("known") == "true") ? "<li id='menuOptionPreviewFile'>Preview</li>" : "<li class='ui-state-disabled'>Preview</li>";
         options += "<li id='menuOptionDownloadFile'>Download</li>";
         options += "<li id='menuOptionShare'>Share</li>";
         options += "<li id='menuOptionMoveCopyFile'>Move or Copy</li>";
         options += "<li id='menuOptionDeleteFile'>Delete</li>"; 
     } else {
-        options = "<li id='menuOptionOpenFolder'>Open</li>";
-        options += "<li>Download</li>";
-        options += "<li id='menuOptionRemoveFolder'>Remove Folder</li>";
+        var cell = callingItem.parent().parent().parent();
+        var icon = cell.find("img");
+        var name = icon.attr("name");
+
+        options = "<li id='menuOptionOpenFolder'>Open</li>";u
+        options += (name != "..") ? "<li id='menuOptionDownloadFolder'>Download</li>" : "<li class='ui-state-disabled'>Download</li>";
+        options += (name != "..") ? "<li id='menuOptionRemoveFolder'>Remove Folder</li>" : "<li class='ui-state-disabled'>Remove Folder</li>";
     }
 
     $content.append(options);
@@ -419,6 +445,14 @@ function ShowContextualMenu(callingItem) {
     $("body").append($contextualMenu);
 
     // bind events
+    $("#menuOptionPreviewFile").bind({
+        click: function () {
+            var cell = callingItem.parent().parent().parent();
+            var icon = cell.find("img");
+            icon.trigger("click");
+        }
+    });
+
     $("#menuOptionDownloadFile").bind({
         click: function () {
             FileDownload(callingItem);
@@ -497,7 +531,21 @@ function FolderOpen(callingItem) {
     var icon = cell.find("img");
     var folderId = icon.attr("fileid");
     var cloud = icon.attr("cloud");
-    ListContents(cloud, folderId);
+    var cloudIndex = cloudsArray.indexOf(cloud);
+
+    CloseContextualMenu(null);
+
+    if (folderId != "..") {
+        var name = icon.attr("name");
+        FoldersBreadcrumbs[cloudIndex].push({
+            name: name,
+            id: folderId
+        });
+        ListContents(cloud, folderId);
+    } else {
+        FoldersBreadcrumbs[cloudIndex].pop();
+        ListContents(cloud, FoldersBreadcrumbs[cloudIndex][FoldersBreadcrumbs[cloudIndex].length - 1].id);
+    }
 }
 
 function FolderDelete(callingItem) {

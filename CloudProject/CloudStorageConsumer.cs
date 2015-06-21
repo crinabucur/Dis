@@ -65,12 +65,17 @@ namespace CloudProject
                         break;
                     }
                 case "doc":
-                case "docx":
 	                {
                         imageUrl = "Images/File Icons/" + extension + ".png";
                         Type = "doc";
                         break;
 	                }
+                case "docx":
+                    {
+                        imageUrl = "Images/File Icons/" + extension + ".png";
+                        Type = "docx";
+                        break;
+                    }
                 case "pdf":
                     {
                         imageUrl = "Images/File Icons/" + extension + ".png";
@@ -100,6 +105,7 @@ namespace CloudProject
 	                {
                         imageUrl = "Images/File Icons/" + extension + ".png";
                         Type = "archive";
+                        IsKnownType = false;
 	                    break;
 	                }
                 default:

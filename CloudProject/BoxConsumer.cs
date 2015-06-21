@@ -18,9 +18,6 @@ namespace CloudProject
         public BoxConsumer()
         {
             name = "Box";
-            token.access_token = "NRPiR9Xd1VR0gIZyNiskM4uKGBtXVAS5"; // TODO: remove hardcoding
-
-            //PrepareRequests();
         }
 
         private void PrepareRequests()

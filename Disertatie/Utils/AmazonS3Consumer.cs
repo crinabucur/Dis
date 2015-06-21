@@ -235,6 +235,7 @@ namespace Disertatie.Utils
 
         public override string GetSpaceQuota()
         {
+            // not available with the AWS SDK for .NET
             throw new NotImplementedException();
         }
 
@@ -274,7 +275,16 @@ namespace Disertatie.Utils
 
         public override int GetFileSize(string fileId)
         {
-            throw new NotImplementedException();
+            GetObjectRequest request = new GetObjectRequest()
+            {
+                BucketName = _currentBucket,
+                Key = fileId
+            };
+
+            using (GetObjectResponse response = _client.GetObject(request))
+            {
+                return (int)response.Headers.ContentLength;
+            }
         }
 
         public override void DeleteFile(string fileId)
@@ -343,8 +353,11 @@ namespace Disertatie.Utils
 
                 try
                 {
-                    DeleteObjectsResponse resp = _client.DeleteObjects(multiObjectDeleteRequest);
-                    Console.WriteLine("Successfully deleted all {0} items", resp.DeletedObjects.Count);
+                    if (listOfKeys.Count > 0)
+                    {
+                        DeleteObjectsResponse resp = _client.DeleteObjects(multiObjectDeleteRequest);
+                        Console.WriteLine("Successfully deleted all {0} items", resp.DeletedObjects.Count);
+                    }
 
                     DeleteBucketResponse res = _client.DeleteBucket(folderId);
                     return true;
@@ -353,12 +366,66 @@ namespace Disertatie.Utils
                 {
                     return false;
                 }
+                catch (Exception ex)
+                {
+                    return false;
+                }
             }
         }
 
         public override ResponsePackage AddFolder(string parentFolderId, string _name)
         {
-            throw new NotImplementedException();
+            ResponsePackage ret = new ResponsePackage();
+
+            if (parentFolderId != getRootFolderId())
+            {
+                // a folder is wanted
+                try
+                {
+                    PutObjectRequest request = new PutObjectRequest()
+                    {
+                        ContentBody = string.Empty,
+                        BucketName = _currentBucket,
+                        Key = (string.Equals(_currentBucket, parentFolderId)) ? _name + "/" : parentFolderId + _name + "/" // simulate folder structure with final "/" separator
+                    };
+
+                    PutObjectResponse response = _client.PutObject(request);
+                }
+                catch (AmazonS3Exception amazonS3Exception)
+                {
+                    ret.Error = true;
+                    if (amazonS3Exception.ErrorCode != null && (amazonS3Exception.ErrorCode.Equals("InvalidAccessKeyId") || amazonS3Exception.ErrorCode.Equals("InvalidSecurity")))
+                    {
+                        ret.ErrorMessage = "The folder couldn't be created! Please check the provided AWS Credentials.";
+                    }
+                    else
+                    {
+                        ret.ErrorMessage = "An error occurred while creating the folder: " + amazonS3Exception.Message;
+                    }
+                }
+            }
+            else
+            {
+                // a bucket should be created
+                try
+                {
+                    PutBucketRequest request = new PutBucketRequest {BucketName = _name};
+                    _client.PutBucket(request);
+                }
+                catch (AmazonS3Exception amazonS3Exception)
+                {
+                    ret.Error = true;
+                    if (amazonS3Exception.ErrorCode != null && (amazonS3Exception.ErrorCode.Equals("InvalidAccessKeyId") || amazonS3Exception.ErrorCode.Equals("InvalidSecurity")))
+                    {
+                        ret.ErrorMessage = "The bucket couldn't be created! Please check the provided AWS Credentials.";
+                    }
+                    else
+                    {
+                        ret.ErrorMessage = "An error occurred while creating the bucket: " + amazonS3Exception.Message;
+                    }
+                }
+            }
+            return ret;
         }
 
         public override string GetLogOutEndpoint()

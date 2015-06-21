@@ -713,6 +713,9 @@
     <Content Include="Pdf\web\locale\zh-TW\viewer.properties" />
     <Content Include="Pdf\web\locale\zu\viewer.properties" />
     <Content Include="Handlers\pdf.ashx" />
+    <Content Include="Handlers\txt.ashx" />
+    <Content Include="Handlers\doc.ashx" />
+    <Content Include="Handlers\docx.ashx" />
     <None Include="Properties\PublishProfiles\pub.pubxml" />
     <None Include="Scripts\jquery-1.8.2.intellisense.js" />
     <Content Include="Pdf\build\pdf.js" />
@@ -953,11 +956,20 @@
     <Compile Include="Handlers\AjaxFileHandler.ashx.cs">
       <DependentUpon>AjaxFileHandler.ashx</DependentUpon>
     </Compile>
+    <Compile Include="Handlers\docx.ashx.cs">
+      <DependentUpon>docx.ashx</DependentUpon>
+    </Compile>
     <Compile Include="Handlers\FileDownloadHandler.ashx.cs">
       <DependentUpon>FileDownloadHandler.ashx</DependentUpon>
     </Compile>
     <Compile Include="Handlers\jpg.ashx.cs">
       <DependentUpon>jpg.ashx</DependentUpon>
+    </Compile>
+    <Compile Include="Handlers\doc.ashx.cs">
+      <DependentUpon>doc.ashx</DependentUpon>
+    </Compile>
+    <Compile Include="Handlers\txt.ashx.cs">
+      <DependentUpon>txt.ashx</DependentUpon>
     </Compile>
     <Compile Include="Handlers\pdf.ashx.cs">
       <DependentUpon>pdf.ashx</DependentUpon>
