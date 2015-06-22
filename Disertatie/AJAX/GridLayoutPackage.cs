@@ -32,9 +32,9 @@ namespace Disertatie.AJAX
                 // create default layout
                 GridCells = new List<GridCellLayoutData>();
 
-                for (int i = 0; i < 7; i++) // 6
+                for (int i = 0; i < Enum.GetNames(typeof(CloudStorages)).Length; i++) // 7
                 {
-                    int row = (i < 3) ? 1 : 3;
+                    int row = (i < 3) ? 1 : (i < 6) ? 3 : 5;
                     int col = (i * 2) % 6 + 1;
                     var gridCellLayoutData = new GridCellLayoutData(((CloudStorages)i).ToString(), "2", "2", col.ToString(), row.ToString());
                     GridCells.Add(gridCellLayoutData);
@@ -58,7 +58,7 @@ namespace Disertatie.AJAX
         public GridCellLayoutData(string _name, string _sizex, string _sizey, string _col, string _row)
         {
             this.name = _name;
-            this.sizex = _sizex;
+            this.sizex = (string.Equals(_name, "Device")) ? "4" :_sizex;
             this.sizey = _sizey;
             this.col = _col;
             this.row = _row;
@@ -68,11 +68,12 @@ namespace Disertatie.AJAX
     enum CloudStorages
     {
         GoogleDrive,
-        OneDrive,
-        SharePoint,
-        Dropbox,
         Box,
-        Device,
-        AmazonS3
+        Dropbox,
+        AmazonS3,
+        SharePoint,
+        BaseCamp,
+        OneDrive,
+        Device
     }
 }

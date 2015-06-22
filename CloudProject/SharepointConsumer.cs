@@ -314,6 +314,7 @@ namespace CloudProject
 
         public override string GetSpaceQuota()
         {
+            // not available via SharePoint REST API
             throw new NotImplementedException();
         }
 

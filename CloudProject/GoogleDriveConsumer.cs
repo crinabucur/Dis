@@ -58,12 +58,14 @@ namespace CloudProject
 
             if (folderId == getRootFolderId())
             {
-                ret.Insert(foldersCount, new CloudItem()
+                var item = new CloudItem()
                 {
                     Id = "sharedWithMe",
                     Name = "Shared with Me",
                     isFolder = true
-                });
+                };
+                item.SetImageUrl();
+                ret.Insert(foldersCount, item);
             }
 
             return ret;
@@ -71,7 +73,7 @@ namespace CloudProject
 
         public override void ListSubfoldersInFolder(string folderId, string folderName, int outlineLevel, ref List<CloudFolder> list)
         {
-            WebRequest request = WebRequest.Create("https://api.box.com/2.0/folders/" + folderId + "/items?fields=name");
+            WebRequest request = WebRequest.Create("https://www.googleapis.com/drive/v2/files?maxResults=1000&q='" + folderId + "'+in+parents+and+trashed%3Dfalse&key=" + config.appKey + "&fields=items");
             request.Headers["Authorization"] = "Bearer " + token.access_token;
             request.Method = "GET";
 
@@ -82,11 +84,11 @@ namespace CloudProject
 
             list.Add(new CloudFolder { Name = folderName, OutlineLevel = outlineLevel, Id = folderId });
 
-            foreach (JObject val in jobj["entries"])
+            foreach (JObject val in jobj["items"])
             {
                 if (!val["mimeType"].ToString().EndsWith(".folder")) continue;
 
-                ListSubfoldersInFolder(val["id"].ToString(), val["name"].ToString(), outlineLevel + 1, ref list);
+                ListSubfoldersInFolder(val["id"].ToString(), val["title"].ToString(), outlineLevel + 1, ref list);
             }
         }
 
@@ -124,7 +126,21 @@ namespace CloudProject
 
         public override string GetSpaceQuota()
         {
-            throw new NotImplementedException();
+            //throw new NotImplementedException();
+            // https://www.googleapis.com/drive/v2/about
+
+            HttpWebRequest request = (HttpWebRequest)WebRequest.Create("https://www.googleapis.com/drive/v2/about");
+            request.Headers["Authorization"] = "Bearer " + token.access_token;
+            request.Method = "GET";
+            HttpWebResponse response = (HttpWebResponse)request.GetResponse();
+            string body = new StreamReader(response.GetResponseStream()).ReadToEnd();
+            var retVal = JObject.Parse(body);
+            
+            if (retVal != null)
+            {
+                return Utils.FormatQuota((long)retVal["quotaBytesUsedAggregate"]) + " of " + Utils.FormatQuota((long)retVal["quotaBytesTotal"]);
+            }
+            return "";
         }
 
         public override CloudItem GetFileMetadata(string fileId)
@@ -297,7 +313,7 @@ namespace CloudProject
             throw new Exception("Failed to create the document");
         }
 
-        public override void DeleteFile(string fileId) // TODO: TEST!!!!!
+        public override void DeleteFile(string fileId)
         {
             HttpWebRequest request = (HttpWebRequest)WebRequest.Create("https://www.googleapis.com/drive/v2/files/" + fileId);
             request.Headers["Authorization"] = "Bearer " + token.access_token;
@@ -306,7 +322,7 @@ namespace CloudProject
             request.Abort();
         }
 
-        public override bool DeleteFolder(string folderId) // TODO: TEST!!!!!
+        public override bool DeleteFolder(string folderId)
         {
             try
             {

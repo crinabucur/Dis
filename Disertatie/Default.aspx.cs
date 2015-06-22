@@ -8,12 +8,15 @@ using System.Net;
 using System.Text;
 using System.Web;
 using System.Web.Http;
+using System.Web.Script.Serialization;
 using System.Web.Services;
 using System.Web.UI;
 using System.Web.UI.WebControls;
 using CloudProject;
 using Disertatie.AJAX;
 using Disertatie.Utils;
+using DotNetOpenAuth.Messaging;
+using DotNetOpenAuth.OAuth2;
 using Newtonsoft.Json.Linq;
 
 namespace Disertatie
@@ -45,31 +48,98 @@ namespace Disertatie
                 }
             }
             #endregion
-            #region Amazon S3 integration - no longer used
-            else if (_amazonRedirectUri != "" && Request["code"] != null && Request["code"] != "")
-            {
-                // this must be an Amazon code
-                var consumer = ((AmazonS3Consumer) HttpContext.Current.Session["amazons3Consumer"]);
+            #region GoogleDrive integration - not used
+            //if (Request["state"] != null)
+            //{
+            //    JavaScriptSerializer jss = new JavaScriptSerializer();
+            //    bool parsedIt = true;
+            //    Dictionary<string, object> d = null;
+            //    try
+            //    {
+            //        d = (Dictionary<string, object>)jss.Deserialize<dynamic>(Request["state"]);
+            //    }
+            //    catch (Exception ex)
+            //    {
+            //        parsedIt = false;
+            //    }
+            //    if (parsedIt && d["action"].ToString() == "open")
+            //    {
+            //        string fileId = (string)((Object[])d["ids"])[0];
+            //        Session["openGoogleDriveFileId"] = fileId;
 
-                HttpWebRequest request = (HttpWebRequest)WebRequest.Create(consumer.config.tokenUri);
-                request.Method = "POST";
-                request.ContentType = "application/x-www-form-urlencoded;charset=UTF-8";
-                string metaData = "grant_type=authorization_code&code=" + Request["code"] + "&client_id=" + consumer.config.appKey + "&client_secret=" + consumer.config.appSecret + "&redirect_uri=" + _amazonRedirectUri;
-                byte[] bytes = Encoding.UTF8.GetBytes(metaData);
-                using (var reqStream = request.GetRequestStream())
-                {
-                    reqStream.Write(bytes, 0, bytes.Length);
-                }
-                var response = request.GetResponse();
-                var obj = JObject.Parse(new StreamReader(response.GetResponseStream()).ReadToEnd());
-                consumer.token = new OAuthToken
-                {
-                    access_token = obj["access_token"].ToString(),
-                    refresh_token = obj["refresh_token"].ToString()
-                };
-                _amazonRedirectUri = "";
-                request.Abort();
-            }
+            //        Response.Redirect(Request.Path);
+            //        Response.End();
+            //        return;
+            //    }
+            //}
+
+            //if (Session["openGoogleDriveFileId"] != null)
+            //{
+            //    CloudStorageConsumer cloudConsumer = Session["googledriveConsumer"] as CloudStorageConsumer;
+            //    DotNetOpenAuth.OAuth2.WebServerClient wsClient = new WebServerClient(new AuthorizationServerDescription()
+            //    {
+            //        AuthorizationEndpoint = new Uri(cloudConsumer.config.authorizeUri),
+            //        TokenEndpoint = new Uri(cloudConsumer.config.tokenUri),
+            //        ProtocolVersion = ProtocolVersion.V20
+            //    }, cloudConsumer.config.appKey, cloudConsumer.config.appSecret);
+
+            //    wsClient.ClientCredentialApplicator = ClientCredentialApplicator.PostParameter(cloudConsumer.config.appSecret);
+            //    IAuthorizationState accessTokenResponse = null;
+            //    accessTokenResponse = wsClient.ProcessUserAuthorization();
+
+            //    if (accessTokenResponse == null)
+            //    {
+            //        // If we don't yet have access, immediately request it.
+            //        string[] scopes = null;
+            //        if (cloudConsumer.config.scope != null)
+            //            scopes = cloudConsumer.config.scope.Split(new char[] { '+', ';' });
+            //        Uri callback = MessagingUtilities.GetRequestUrlFromContext().StripQueryArgumentsWithPrefix("oauth_").StripQueryArgumentsWithPrefix("action");
+            //        var request = wsClient.PrepareRequestUserAuthorization(scopes, callback);
+            //        request.Send();
+            //    }
+            //    else
+            //    {
+            //        cloudConsumer.token.access_token = accessTokenResponse.AccessToken;
+            //        if (cloudConsumer.token.access_token == null)// the user denied access
+            //        {
+            //            Response.Write("<script>window.location.href = '" + Session["url"] + "'</script>");
+            //            Response.Flush();
+            //            Response.End();
+            //            return;
+            //        }
+            //        else
+            //        {
+            //            //OpenCloudDocument("googledrive", (string)Session["openGoogleDriveFileId"]);
+            //            //Session["openGoogleDriveFileId"] = null;
+            //        }
+            //    }
+            //}
+            #endregion
+            #region Amazon S3 integration - no longer used
+            //else if (_amazonRedirectUri != "" && Request["code"] != null && Request["code"] != "")
+            //{
+            //    // this must be an Amazon code
+            //    var consumer = ((AmazonS3Consumer) HttpContext.Current.Session["amazons3Consumer"]);
+
+            //    HttpWebRequest request = (HttpWebRequest)WebRequest.Create(consumer.config.tokenUri);
+            //    request.Method = "POST";
+            //    request.ContentType = "application/x-www-form-urlencoded;charset=UTF-8";
+            //    string metaData = "grant_type=authorization_code&code=" + Request["code"] + "&client_id=" + consumer.config.appKey + "&client_secret=" + consumer.config.appSecret + "&redirect_uri=" + _amazonRedirectUri;
+            //    byte[] bytes = Encoding.UTF8.GetBytes(metaData);
+            //    using (var reqStream = request.GetRequestStream())
+            //    {
+            //        reqStream.Write(bytes, 0, bytes.Length);
+            //    }
+            //    var response = request.GetResponse();
+            //    var obj = JObject.Parse(new StreamReader(response.GetResponseStream()).ReadToEnd());
+            //    consumer.token = new OAuthToken
+            //    {
+            //        access_token = obj["access_token"].ToString(),
+            //        refresh_token = obj["refresh_token"].ToString()
+            //    };
+            //    _amazonRedirectUri = "";
+            //    request.Abort();
+            //}
             #endregion
         }
 
@@ -219,7 +289,7 @@ namespace Disertatie
         [WebMethod]
         public static string GetSpaceQuota(string cloud)
         {
-            if (cloud.ToLower() != "box") return ""; // TODO: remove
+            if (cloud.ToLower() != "box" && cloud.ToLower() != "dropbox" && cloud.ToLower() != "googledrive") return "";
             CloudStorageConsumer cloudConsumer = HttpContext.Current.Session[cloud.ToLower() + "Consumer"] as CloudStorageConsumer;
             return cloudConsumer.GetSpaceQuota();
         }

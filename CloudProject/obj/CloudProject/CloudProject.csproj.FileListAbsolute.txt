@@ -16,6 +16,6 @@ C:\Users\Crina\Documents\Visual Studio 2013\Projects\Disertatie\CloudProject\bin
 C:\Users\Crina\Documents\Visual Studio 2013\Projects\Disertatie\CloudProject\bin\CloudProject\System.Runtime.xml
 C:\Users\Crina\Documents\Visual Studio 2013\Projects\Disertatie\CloudProject\bin\CloudProject\System.Threading.Tasks.xml
 C:\Users\Crina\Documents\Visual Studio 2013\Projects\Disertatie\CloudProject\obj\CloudProject\CloudProject.csproj.App.config
-C:\Users\Crina\Documents\Visual Studio 2013\Projects\Disertatie\CloudProject\obj\CloudProject\CloudProject.csprojResolveAssemblyReference.cache
 C:\Users\Crina\Documents\Visual Studio 2013\Projects\Disertatie\CloudProject\obj\CloudProject\CloudProject.dll
 C:\Users\Crina\Documents\Visual Studio 2013\Projects\Disertatie\CloudProject\obj\CloudProject\CloudProject.pdb
+C:\Users\Crina\Documents\Visual Studio 2013\Projects\Disertatie\CloudProject\obj\CloudProject\CloudProject.csprojResolveAssemblyReference.cache

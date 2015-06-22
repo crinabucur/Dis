@@ -413,6 +413,17 @@
     <Content Include="Images\heroAccent.png" />
     <Content Include="Images\loader.gif" />
     <Content Include="Images\logo.png" />
+    <Content Include="Images\Menu Icons\Add Folder.png" />
+    <Content Include="Images\Menu Icons\Copy.png" />
+    <Content Include="Images\Menu Icons\Delete.png" />
+    <Content Include="Images\Menu Icons\Download.png" />
+    <Content Include="Images\Menu Icons\Grid.png" />
+    <Content Include="Images\Menu Icons\List.png" />
+    <Content Include="Images\Menu Icons\Preview.png" />
+    <Content Include="Images\Menu Icons\Properties.png" />
+    <Content Include="Images\Menu Icons\Refresh.png" />
+    <Content Include="Images\Menu Icons\Share - link.png" />
+    <Content Include="Images\Menu Icons\Sign out.png" />
     <Content Include="Images\oneDrive.png" />
     <Content Include="Images\onedrive_mini.png" />
     <Content Include="Images\orderedList0.png" />

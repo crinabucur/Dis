@@ -48,10 +48,12 @@
                    <% if (!IsAuthCloud(cell.name))
                       {%>
                           <img id="<%= cell.name %>" class="CloudIconNotLoggedIn" src="Images/<%= cell.name %>.png" title="Click to sign in" />
+                          <span class="CloudMenuSpan" style="display:none"><span class="CloudMenuSpanContainer" ></span></span>
                      <% } else 
                         { %>
                           <img id="<%= cell.name %>" class="CloudIconNotLoggedIn" src="Images/<%= cell.name %>.png" title="Click to sign in" style="display:none"/>
                           <%if (cell.name != "Device") { %> <img src="Images/loader.gif" class="Loader" />
+                          <span class="CloudMenuSpan"><span class="CloudMenuSpanContainer"></span></span>
                      <%}
                     }%>
                </li>

@@ -19,6 +19,8 @@ namespace CloudProject
         public string appName; //should be used by basecamp to send a user agent string can't easily set user agent in pcl
         private string accountId;
 
+        private string _currentProject = "";
+
         public BasecampConsumer()
         {
             name = "Basecamp";
@@ -26,6 +28,7 @@ namespace CloudProject
 
         private List<CloudItem> getProjects()
         {
+            _currentProject = "";
             List<CloudItem> ret = new List<CloudItem>();
 
             try
@@ -38,13 +41,15 @@ namespace CloudProject
 
                 foreach (JObject obj in retVal)
                 {
-                    ret.Add(new CloudItem()
+                    var item = new CloudItem
                     {
                         Id = obj["id"].ToString(),
                         cloudConsumer = this.name,
                         isFolder = true,
                         Name = obj["name"].ToString()
-                    });
+                    };
+                    item.SetImageUrl();
+                    ret.Add(item);
                 }
             }
             catch (WebException e)
@@ -82,14 +87,17 @@ namespace CloudProject
             foreach (JObject file in docs)
             {
                 items.Add(GetFileMetadata(file["url"].ToString()));
-                break;
             }
+
+            _currentProject = projectId;
 
             return items;
         }
 
         public override void ListSubfoldersInFolder(string folderId, string folderName, int outlineLevel, ref List<CloudFolder> list)
         {
+            list.Add(new CloudFolder { Name = folderName, OutlineLevel = outlineLevel, Id = folderId });
+
             string url = string.Format("https://basecamp.com/{0}/api/v1/projects.json", accountId);
             HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
             request.Headers["Authorization"] = "Bearer " + token.access_token;
@@ -151,6 +159,7 @@ namespace CloudProject
 
         public override string GetSpaceQuota()
         {
+            // not available via BaseCamp REST API
             throw new NotImplementedException();
         }
 
@@ -178,7 +187,7 @@ namespace CloudProject
 
         public override CloudItem GetFileMetadata(string fileId)
         {
-            return new CloudItem()
+            var item = new CloudItem()
             {
                 Id = fileId,
                 UniqueId = fileId,
@@ -187,26 +196,126 @@ namespace CloudProject
                 isFolder = false,
                 Name = Uri.UnescapeDataString(fileId.Substring(fileId.LastIndexOf("/") + 1))
             };
+            item.SetImageUrl();
+            return item;
         }
 
         public override CloudItem SaveCreateDocument(Stream content, string fileName, string contentType = null, string folderId = null)
         {
-            throw new NotImplementedException();
+            if (content.CanSeek)
+                content.Position = 0;
+
+            // First step - create attachment and receive token
+            string url = string.Format("https://basecamp.com/{0}/api/v1/attachments.json", accountId);
+            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
+            request.Headers["Authorization"] = "Bearer " + token.access_token;
+            request.SetHeader("User-Agent", appName);
+            request.Method = "POST";
+            request.ContentType = "application/vnd.ms-project"; //contentType; -- "application/xml" gets 504 gateway timeout every time
+
+            using (var reqStream = request.GetRequestStream())
+            {
+                content.CopyTo(reqStream);
+            }
+
+            HttpWebResponse response = (HttpWebResponse)request.GetResponse();
+            JObject retVal;
+            string newFileToken;
+
+            if (response.StatusCode == HttpStatusCode.OK)
+            {
+                retVal = JObject.Parse(new StreamReader(response.GetResponseStream()).ReadToEnd());
+                newFileToken = retVal["token"].ToString();
+
+                // Second step - associate the attachment to an upload
+                url = string.Format("https://basecamp.com/{0}/api/v1/projects/{1}/uploads.json", accountId, folderId);
+
+                request = (HttpWebRequest)WebRequest.Create(url);
+                request.ContentType = "application/json; charset=utf-8";
+                request.SetHeader("User-Agent", appName);
+                request.Method = "POST";
+                request.Headers["Authorization"] = "Bearer " + token.access_token;
+
+                string metaData = "{";
+                metaData += "\"attachments\": [{ \"token\" : \"" + newFileToken + "\", ";
+                metaData += "\"name\":\"" + fileName + "\"}]";
+                metaData += "}";
+
+                byte[] bytes = UTF8Encoding.UTF8.GetBytes(metaData);
+                using (var reqStream = request.GetRequestStream())
+                {
+                    reqStream.Write(bytes, 0, bytes.Length);
+                }
+
+                using (response = (HttpWebResponse)request.GetResponse())
+                {
+                    if (response.StatusCode != HttpStatusCode.Created)
+                    {
+                        throw new Exception("Failed to upload content to BaseCamp");
+                    }
+                    retVal = JObject.Parse(new StreamReader(response.GetResponseStream()).ReadToEnd());
+                    return GetFileMetadata(retVal["attachments"][0]["url"].ToString());
+                }
+            }
+            throw new Exception("Failed to create the document");
         }
 
         public override void DeleteFile(string fileId)
         {
-            throw new NotImplementedException();
+            try
+            {
+                fileId = GetAttachmentUid(fileId);
+                string url = string.Format("https://basecamp.com/{0}/api/v1/projects/{1}/attachments/{2}.json", accountId, _currentProject, fileId);
+                HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
+                request.Headers["Authorization"] = "Bearer " + token.access_token;
+                request.SetHeader("User-Agent", appName);
+
+                request.Method = "DELETE";
+
+                HttpWebResponse response = (HttpWebResponse)request.GetResponse();
+            }
+            catch (WebException we)
+            {
+                var errorResponse = we.Response as HttpWebResponse; // 204 No Content if successful, possibly 403 Forbidden
+                Debug.WriteLine(errorResponse.ToString());
+            }
         }
 
         public override bool DeleteFolder(string folderId)
         {
-            throw new NotImplementedException();
+            string url = string.Format("https://basecamp.com/{0}/api/v1/projects/{1}.json", accountId, folderId);
+            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
+            request.Headers["Authorization"] = "Bearer " + token.access_token;
+            request.SetHeader("User-Agent", appName);
+
+            request.Method = "DELETE";
+
+            try
+            {
+                HttpWebResponse response = (HttpWebResponse)request.GetResponse();
+                if (response.StatusCode != HttpStatusCode.NoContent) // 204 No Content if successful
+                {
+                    return false;
+                }
+            }
+            catch (WebException we)
+            {
+                var errorResponse = we.Response as HttpWebResponse; // possibly 403 Forbidden
+                return false;
+            }
+            return true;
         }
 
         public override ResponsePackage AddFolder(string parentFolderId, string _name)
         {
             var ret = new ResponsePackage();
+
+            if (parentFolderId != getRootFolderId())
+            {
+                ret.Error = true;
+                ret.ErrorMessage = "Projects can only be created in the Root! BaseCamp does not allow subfolders.";
+                return ret;
+            }
 
             string url = string.Format("https://basecamp.com/{0}/api/v1/projects.json", accountId);
             HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
@@ -214,7 +323,7 @@ namespace CloudProject
             request.SetHeader("User-Agent", appName);
 
             request.Method = "POST";
-            request.ContentType = "text/json";
+            request.ContentType = "application/json; charset=utf-8";
 
             string json = "{\"name\":\"" + _name + "\"," +
                           "\"description\":\"Created with CloudSphere\"}";
@@ -262,6 +371,12 @@ namespace CloudProject
             accountId = null;
 
             return logOutUrl;
+        }
+
+        private string GetAttachmentUid(string attachmentId)
+        {
+            attachmentId = attachmentId.Substring(attachmentId.IndexOf("attachments") + 12);
+            return attachmentId.Substring(0, attachmentId.IndexOf("/"));
         }
     }
 }

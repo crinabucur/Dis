@@ -84,7 +84,39 @@ namespace CloudProject
 
         public override ResponsePackage AddFolder(string parentFolderId, string _name)
         {
-            throw new NotImplementedException();
+            var ret = new ResponsePackage();
+
+            HttpWebRequest request = (HttpWebRequest)WebRequest.Create("https://api.dropbox.com/1/fileops/create_folder");
+            request.Headers["Authorization"] = "Bearer " + token.access_token;
+            request.Method = "POST";
+            request.ContentType = "application/x-www-form-urlencoded";
+
+            try
+            {
+                string metaData = "root=auto";
+                metaData += "&path=" + parentFolderId + "/" + _name;
+                byte[] bytes = Encoding.UTF8.GetBytes(metaData);
+                using (var reqStream = request.GetRequestStream())
+                {
+                    reqStream.Write(bytes, 0, bytes.Length);
+                }
+                request.GetResponse();
+                request.Abort();
+            }
+            catch (WebException we)
+            {
+                ret.Error = true;
+               
+                var errorResponse = we.Response as HttpWebResponse;
+                if (errorResponse != null && errorResponse.StatusCode == HttpStatusCode.Forbidden)
+                {
+                    ret.ErrorMessage = "Could not create folder, there is already a sibling folder with the same name!";
+                }
+            }
+            if (ret.Error && ret.ErrorMessage == "null")
+                ret.ErrorMessage = "Could not create folder, the chose name could be invalid.";
+
+            return ret;
         }
 
         public override string GetLogOutEndpoint()
@@ -209,7 +241,7 @@ namespace CloudProject
         }
 
         /// <summary>
-        /// CCB 18.02.2015
+        /// 18.02.2015
         /// </summary>
         /// <param name="fileId">the id of the file for which the size is needed</param>
         /// <returns>the size of the file (bytes)</returns>
@@ -243,7 +275,23 @@ namespace CloudProject
 
         public override string GetSpaceQuota()
         {
-            throw new NotImplementedException();
+            HttpWebRequest request = (HttpWebRequest)WebRequest.Create("https://api.dropbox.com/1/account/info");
+            request.Method = "GET";
+            request.Headers["Authorization"] = "Bearer " + token.access_token;
+            var response = new StreamReader(request.GetResponse().GetResponseStream()).ReadToEnd();
+            request.Abort();
+            var retVal = JObject.Parse(response);
+            long usedSpace = 0;
+            long totalSpace = 0;
+            long sharedSpace = 0;
+
+            if (retVal != null)
+            {
+                usedSpace = (long)retVal["quota_info"]["normal"];
+                sharedSpace = (long)retVal["quota_info"]["shared"];
+                totalSpace = (long)retVal["quota_info"]["quota"];
+            }
+            return Utils.FormatQuota(usedSpace + sharedSpace) + " of " + Utils.FormatQuota(totalSpace);
         }
 
         public override CloudItem GetFileMetadata(string fileId)
@@ -336,7 +384,7 @@ namespace CloudProject
             };
         }
 
-        // CCB if a file is not found at a given path, we attempt to find it at other possible paths (removing external folders one by one)
+        // if a file is not found at a given path, we attempt to find it at other possible paths (removing external folders one by one)
         private CloudItem SearchFileByPathFragment(string path, string fileName)
         {
             HttpWebRequest request = (HttpWebRequest)WebRequest.Create(baseUri + "search/dropbox/" + path + "?query=" + fileName + "&access_token=" + token.access_token + "&oauth_consumer_key=" + config.appKey); 

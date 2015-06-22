@@ -1,7 +1,7 @@
 ﻿var viewAsList = false;
 var FoldersBreadcrumbs = [];
-var cloudsArray = ["GoogleDrive", "OneDrive", "Dropbox", "Box", "SharePoint", "AmazonS3"]; //, "Device"];
-var cloudRootsArray = ["root", "me/skydrive/", "/", "0", "", "_"]; //, "Device"];
+var cloudsArray = ["GoogleDrive", "OneDrive", "Dropbox", "Box", "SharePoint", "AmazonS3", "BaseCamp"]; //, "Device"];
+var cloudRootsArray = ["root", "me/skydrive/", "/", "0", "", "_", "basecamp_root"]; //, "Device"];
 
 $(function initialize() {
     //  initialize the global variables used for dialog windows
@@ -15,7 +15,7 @@ $(document).ready(function () {
             var cloud = this.id;
             PageMethods.IsAuthCloud(cloud, function (response) {
                 if (response) {
-                    alert("logged in!");
+                    //alert("logged in!");
                 }
                 else {
                     if (cloud.toLowerCase() == "sharepoint") {
@@ -35,11 +35,13 @@ $(document).ready(function () {
         });
 
         for (var i = 0; i < cloudsArray.length; i++) {
-            //if (FoldersBreadcrumbs.length < cloudsArray.length) { // initialize breadcrumbs array, only on first page access
+            //if (FoldersBreadcrumbs.length < cloudsArray.length) { 
                 var breadcumbsForCloud = [];
                 FoldersBreadcrumbs.push(breadcumbsForCloud);
             //}
-            ListContents(cloudsArray[i], null);
+                var cell = $("#gridCell" + cloudsArray[i]);
+                if (cell.length > 0 && cell.is(":visible"))
+                    ListContents(cloudsArray[i], null);
         }
 
         if($("div.error")[0]){
@@ -76,11 +78,11 @@ function CloseContextualMenu(e) {
 }
 
 function SetLayoutCookie() {
-    var clouds = ["GoogleDrive", "OneDrive", "Dropbox", "Box", "SharePoint", "AmazonS3", "Device"];
+    var clouds = ["GoogleDrive", "OneDrive", "Dropbox", "Box", "SharePoint", "AmazonS3", "BaseCamp", "Device"];
     var updatedCells = new Array();
     clouds.forEach(function (value) {
         var cell = $("#gridCell" + value.toString());
-        if (cell.length > 0) { // TODO: maybe change
+        if (cell.length > 0) {
             var updatedCell = new Object();
             updatedCell.name = value;
             updatedCell.col = cell.attr('data-col');
@@ -104,10 +106,18 @@ function setCookie(cname, cvalue, exdays) {
 function ListContents(value, folderId) {
     if ($("#" + value.toString()).length == 0 || !($("#" + value.toString()).is(":visible"))) { // if the cloud is logged in and the page is Default
 
+        if (value == "Device")
+            return; // TODO: call specific function
+
         var container = $('#gridCell' + value.toString());
+        var menuSpan = container.find('.CloudMenuSpan');
+        var menuSpanContainer = menuSpan.find('.CloudMenuSpanContainer');
 
         // remove existing items
-        container.find(".TableItems, .SwitchLayoutLink, .CloudMiniIcon").remove();
+        container.find(".TableItems").remove();  //container.find(".TableItems, .SwitchLayoutLink, .CloudMiniIcon").remove();
+        //menuSpanContainer.empty();
+
+        menuSpan.show();
 
         // determine item width
         var width = container.width();
@@ -174,15 +184,47 @@ function ListContents(value, folderId) {
             itemsCount++;
         }
 
-        container.append("<img src='Images/" + value.toString().toLowerCase() + "_mini.png' class='CloudMiniIcon'/>");
-        container.append("<a class='SwitchLayoutLink'>View as List</a>");
-        container.append("<a class='SwitchLayoutLink' onclick='return AddFolderDialog(&quot;" + value.toString() + "&quot;, &quot;" + folderId.replace(new RegExp("'", "g"), "&apos;") + "&quot;);'>Add Folder</a>");
-        container.append("<a class='SwitchLayoutLink' onclick='return SignOut(&quot;" + value.toString() + "&quot;)'>LogOut</a>");
-        //container.append("<img src='Images/gridIcon.png'/>");
-        //container.append("<img src='Images/listIcon.png'/ style='margin-left:5px;'>");
+        if (menuSpanContainer.find(".CloudMiniIcon").length == 0) {
+            menuSpanContainer.append("<img src='Images/" + value.toString().toLowerCase() + "_mini.png' class='CloudMiniIcon' title='" + value + "'/>");
+            menuSpanContainer.append("<a><img class='CloudMenuIcon' src='Images/Menu Icons/Grid.png' title='View as Grid'/></a>");
+            menuSpanContainer.append("<a><img class='CloudMenuIcon' src='Images/Menu Icons/List.png' title='View as List'/></a>");
+            menuSpanContainer.append("<a><img class='CloudMenuIcon RefreshFolderMenuIcon' src='Images/Menu Icons/Refresh.png' title='Refresh' /></a>");
+            menuSpanContainer.append("<a onclick='return SignOut(&quot;" + value.toString() + "&quot;)'><img class='CloudMenuIcon' src='Images/Menu Icons/Sign out.png' title='Sign Out'/></a>");
+            //menuSpan.append("<a><img src='Images/Menu Icons/Refresh.png' /></a>");
+            //menuSpan.append("<a><img src='Images/Menu Icons/Preview.png' /></a>");
+            //menuSpan.append("<a class='SwitchLayoutLink'>View as List</a>");
+            menuSpanContainer.append("<a><img class='CloudMenuIcon AddFolderMenuIcon' src='Images/Menu Icons/Add Folder.png' title='Add Folder'></a>");  // onclick='return AddFolderDialog(&quot;" + value.toString() + "&quot;, &quot;" + folderId.replace(new RegExp("'", "g"), "&apos;") + "&quot;);'
+        }
+
+        var addFolder = menuSpanContainer.find(".AddFolderMenuIcon");
+        addFolder.unbind("click");
+        addFolder.bind(
+            'click', function (e) {
+                AddFolderDialog(value.toString(), folderId); // folderId.replace(new RegExp("'", "g"))
+            }
+        );
+
+        var refreshFolder = menuSpanContainer.find(".RefreshFolderMenuIcon");
+        refreshFolder.unbind("click");
+        refreshFolder.bind(
+            'click', function (e) {
+                RefreshFolder(value.toString(), folderId);
+            }
+        );
+       
+        //menuSpan.append("<a class='SwitchLayoutLink' onclick='return SignOut(&quot;" + value.toString() + "&quot;)'>LogOut</a>");
+
+        //container.append("<img src='Images/" + value.toString().toLowerCase() + "_mini.png' class='CloudMiniIcon'/>");
+        //container.append("<img src='Images/Menu Icons/Download.png' class='CloudMiniIcon'/>");
+        //container.append("<img src='Images/Menu Icons/Refresh.png' class='CloudMiniIcon'/>");
+        //container.append("<img src='Images/Menu Icons/Preview.png' class='CloudMiniIcon'/>");
+        //container.append("<a class='SwitchLayoutLink'>View as List</a>");
+        //container.append("<a class='SwitchLayoutLink' onclick='return AddFolderDialog(&quot;" + value.toString() + "&quot;, &quot;" + folderId.replace(new RegExp("'", "g"), "&apos;") + "&quot;);'>Add Folder</a>");
+        //container.append("<a class='SwitchLayoutLink' onclick='return SignOut(&quot;" + value.toString() + "&quot;)'>LogOut</a>");
 
         // TODO: optimization - this doesn't need to be retrieved with every listing (?)
-        container.append("<span class='Quota' id='quota" + value + "'></span>"); // TODO: add class for styles
+        menuSpanContainer.find(".Quota").remove();
+        menuSpanContainer.append("<span class='Quota' id='quota" + value + "'></span>");
 
         $.ajax({
             type: "POST",
@@ -234,10 +276,11 @@ function ListContents(value, folderId) {
         }
         container.append(table);
 
-        $(".FolderIcon").bind(
+        var folderIcons = container.find(".FolderIcon");
+        folderIcons.bind(
             'click', function (e) {
                 var cancelDefaultAction = CloseContextualMenu(e);
-                if (cancelDefaultAction != true) {
+                //if (cancelDefaultAction != true) {
                     var cid = $(this).attr("fileId");
                     if (cid != "..") {
                         FoldersBreadcrumbs[cloudIndex].push({
@@ -249,11 +292,12 @@ function ListContents(value, folderId) {
                         FoldersBreadcrumbs[cloudIndex].pop();
                         ListContents($($(this).parent()).attr("cloud"), FoldersBreadcrumbs[cloudIndex][FoldersBreadcrumbs[cloudIndex].length - 1].id);
                     }
-                }
+                //}
             }
         );
 
-        $(".FileIcon").bind('click', function (e) {
+        var fileIcons = container.find(".FileIcon");
+        fileIcons.bind('click', function (e) {
             var cancelDefaultAction = CloseContextualMenu(e);
             //if (cancelDefaultAction != true) {
                 var fileId = $(this).attr("fileId");
@@ -381,7 +425,8 @@ function ListContents(value, folderId) {
         });
 
         // Cells (folders, files) events - in grid layout only
-        $(".FolderCell, .FileCell").bind({
+        var folderAndFileCells = container.find(".FolderCell, .FileCell");
+        folderAndFileCells.bind({
             mouseenter: function () {
                 if ($(".DropdownArrowSelected").length > 0 && jQuery(this).find(".DropdownArrowSelected").length > 0) {
                     return;
@@ -397,7 +442,8 @@ function ListContents(value, folderId) {
         });
 
         // Arrow events (in grid layout only?)
-        $(".DropdownArrow").bind({
+        var arrows = container.find(".DropdownArrow");
+        arrows.bind({
             click: function (e) {
                 if (jQuery(this).hasClass("DropdownArrowSelected")) {
                     CloseContextualMenu(e);
@@ -435,7 +481,7 @@ function ShowContextualMenu(callingItem) {
         var icon = cell.find("img");
         var name = icon.attr("name");
 
-        options = "<li id='menuOptionOpenFolder'>Open</li>";u
+        options = "<li id='menuOptionOpenFolder'>Open</li>";
         options += (name != "..") ? "<li id='menuOptionDownloadFolder'>Download</li>" : "<li class='ui-state-disabled'>Download</li>";
         options += (name != "..") ? "<li id='menuOptionRemoveFolder'>Remove Folder</li>" : "<li class='ui-state-disabled'>Remove Folder</li>";
     }
@@ -506,7 +552,7 @@ function FileDelete(callingItem) {
     var icon = cell.find("img");
     var fileId = icon.attr("fileid");
     var cloud = icon.attr("cloud");
-    var r = confirm("You are about to delete this file. De you want to continue?"); // TODO: this can be skipped once undo is implemented
+    var r = confirm("You are about to delete this file. Do you want to continue?"); // TODO: this can be skipped once undo is implemented
     if (r == true) {
         PageMethods.DeleteFile(cloud, fileId, function () {
             var cloudContainer = $("#gridCell" + cloud);
@@ -515,7 +561,7 @@ function FileDelete(callingItem) {
         });
     }
 }
-
+                                                                                                        
 function FileShare(callingItem){
     var cell = callingItem.parent().parent().parent();
     var icon = cell.find("img");
@@ -571,13 +617,15 @@ function SignOut(cloudName) {
                 $('iframe#logOutIframe').remove();
                 $('#' + cloudName).show();
                 var container = $('#gridCell' + cloudName.toString());
-                container.find(".TableItems, .SwitchLayoutLink, .CloudMiniIcon, .Quota").remove(); // remove existing items
+                container.find(".TableItems").remove();  //container.find(".TableItems, .SwitchLayoutLink, .CloudMiniIcon, .Quota").remove(); // remove existing items
+                container.find(".CloudMenuSpan").hide();
             }); 
         }
         else {
             $('#' + cloudName).show();
             var container = $('#gridCell' + cloudName.toString());
-            container.find(".TableItems, .SwitchLayoutLink, .CloudMiniIcon, .Quota").remove(); // remove existing items
+            container.find(".TableItems").remove();  //container.find(".TableItems, .SwitchLayoutLink, .CloudMiniIcon, .Quota").remove(); // remove existing items
+            container.find(".CloudMenuSpan").hide();
         }
     });
 }
@@ -592,6 +640,10 @@ function callLogOutIframe(url, callback) {
     $('iframe#logOutIframe').load(function () {
         callback(this);
     });
+}
+
+function RefreshFolder(cloud, currentFolder) {
+    ListContents(cloud, currentFolder);
 }
 
 

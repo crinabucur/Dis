@@ -6,6 +6,7 @@ using System.Linq;
 using Amazon;
 using Amazon.S3;
 using Amazon.S3.Model;
+using Amazon.S3.Transfer;
 using CloudProject;
 using UserData = CloudProject.UserData;
 
@@ -223,9 +224,86 @@ namespace Disertatie.Utils
             return "_"; // conventional, as bucket names cannot contain the underscore character
         }
 
-        public override CloudItem SaveCreateDocument(Stream content, string fileName, string contentType = null, string folderId = null)
+        public override CloudItem SaveCreateDocument(Stream content, string fileName, string contentType = null, string folderId = null) // TODO: fixxxxxxxxxxxxxxxxxxxxxxxx!
         {
-            throw new NotImplementedException();
+            try
+            {
+                if (folderId != getRootFolderId())
+                {
+                    // the parent is either a folder or a bucket
+
+                    TransferUtility fileTransferUtility = new TransferUtility(_client);
+
+                    if (string.Equals(folderId, _currentBucket))
+                    {
+                        // the parent is a bucket
+
+                        // TODO: delete
+                        byte[] buffer = new byte[16 * 1024];
+                        MemoryStream ms = new MemoryStream();
+
+                        int read;
+                        while ((read = content.Read(buffer, 0, buffer.Length)) > 0)
+                        {
+                            ms.Write(buffer, 0, read);
+                        }
+
+                        ms.Position = 0;
+
+
+                        fileTransferUtility.Upload(ms, _currentBucket, fileName);
+                        return null;
+                    }
+                    else
+                    {
+                        // the parent is a folder
+                        fileTransferUtility.Upload(content, _currentBucket, folderId + fileName);
+                        return null;
+                    }
+                    
+
+                    // 1. Upload a file, file name is used as the object key name.
+                    //fileTransferUtility.Upload(filePath, _currentBucket);
+                    //Console.WriteLine("Upload 1 completed");
+
+                    //// 2. Specify object key name explicitly.
+                    //fileTransferUtility.Upload(filePath, _currentBucket, keyName);
+                    //Console.WriteLine("Upload 2 completed");
+
+                    // 3. Upload data from a type of System.IO.Stream.
+                    //using (FileStream fileToUpload = new FileStream(filePath, FileMode.Open, FileAccess.Read))
+                    //{
+                    //fileTransferUtility.Upload(content, _currentBucket, keyName);
+                    //}
+                    //Console.WriteLine("Upload 3 completed");
+
+                    // 4.Specify advanced settings/options.
+                    //TransferUtilityUploadRequest fileTransferUtilityRequest = new TransferUtilityUploadRequest
+                    //{
+                    //    BucketName = existingBucketName,
+                    //    FilePath = filePath,
+                    //    StorageClass = S3StorageClass.ReducedRedundancy,
+                    //    PartSize = 6291456, // 6 MB.
+                    //    Key = keyName,
+                    //    CannedACL = S3CannedACL.PublicRead
+                    //};
+                    //fileTransferUtilityRequest.Metadata.Add("param1", "Value1");
+                    //fileTransferUtilityRequest.Metadata.Add("param2", "Value2");
+                    //fileTransferUtility.Upload(fileTransferUtilityRequest);
+                    //Console.WriteLine("Upload 4 completed");
+
+                }
+                else
+                {
+                    // the root
+                    return null; // cannot create
+                }
+            }
+            catch (AmazonS3Exception s3Exception)
+            {
+                Console.WriteLine(s3Exception.Message, s3Exception.InnerException);
+                return null;
+            }
         }
 
         public override UserData GetUser()

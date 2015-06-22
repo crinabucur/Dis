@@ -134,7 +134,22 @@ namespace CloudProject
 
         public override string GetSpaceQuota()
         {
-            throw new NotImplementedException();
+            var request = (HttpWebRequest)WebRequest.Create("https://apis.live.net/v5.0/me/skydrive/quota?access_token=" + token.access_token);
+            request.Method = "GET";
+
+            var contentResponse = (HttpWebResponse)request.GetResponse();
+            request.Abort();
+            JObject retVal = JObject.Parse(new StreamReader(contentResponse.GetResponseStream()).ReadToEnd());
+
+            long remainingSpace = 0;
+            long totalSpace = 0;
+
+            if (retVal != null)
+            {
+                remainingSpace = (long)retVal["available"];
+                totalSpace = (long)retVal["quota"];
+            }
+            return Utils.FormatQuota(totalSpace - remainingSpace) + " of " + Utils.FormatQuota(totalSpace);
         }
 
         public override CloudItem GetFileMetadata(string fileId)
