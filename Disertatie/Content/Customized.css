@@ -59,6 +59,18 @@
     -moz-opacity: 0.7;
 }
 
+.LayoutIconDisabled {
+    cursor: default!important;
+    opacity: 0.7;
+    -moz-opacity: 0.7;
+}
+
+.LayoutIconDisabled:hover {
+    cursor: default!important;
+    opacity: 0.7;
+    -moz-opacity: 0.7;
+}
+
 .Quota {
     float:right; 
     margin-right:3px; 

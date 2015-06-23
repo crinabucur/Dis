@@ -2,6 +2,7 @@
 var FoldersBreadcrumbs = [];
 var cloudsArray = ["GoogleDrive", "OneDrive", "Dropbox", "Box", "SharePoint", "AmazonS3", "BaseCamp"]; //, "Device"];
 var cloudRootsArray = ["root", "me/skydrive/", "/", "0", "", "_", "basecamp_root"]; //, "Device"];
+var cloudLayoutArray = [0, 0, 0, 1, 0, 0, 0]; // 0 - grid, 1 - list
 
 $(function initialize() {
     //  initialize the global variables used for dialog windows
@@ -125,7 +126,7 @@ function ListContents(value, folderId) {
         var itemWidth = Math.floor((width - 10) / itemsPerLine);
 
         var cloudIndex = cloudsArray.indexOf(value);
-        //alert(cloudIndex);
+        var layout = cloudLayoutArray[cloudIndex];
 
         folderId = folderId || null;
         if (folderId == null) {
@@ -179,21 +180,49 @@ function ListContents(value, folderId) {
 
         if(folderId != cloudRootsArray[cloudIndex])
         {
-            var goBackFolder = { isFolder: true, Name: "..", Id: "..", imageUrl: "Images/folderIcon_64x64.png" }; // TODO: support for list mode
+            var goBackFolder = (layout == 0) ? { isFolder: true, Name: "..", Id: "..", imageUrl: "Images/folderIcon_64x64.png" }
+                                             : { isFolder: true, Name: "..", Id: "..", imageUrl: "Images/folderIcon_32x32.png" }; 
             items.unshift(goBackFolder);
             itemsCount++;
         }
 
         if (menuSpanContainer.find(".CloudMiniIcon").length == 0) {
             menuSpanContainer.append("<img src='Images/" + value.toString().toLowerCase() + "_mini.png' class='CloudMiniIcon' title='" + value + "'/>");
-            menuSpanContainer.append("<a><img class='CloudMenuIcon' src='Images/Menu Icons/Grid.png' title='View as Grid'/></a>");
-            menuSpanContainer.append("<a><img class='CloudMenuIcon' src='Images/Menu Icons/List.png' title='View as List'/></a>");
+            menuSpanContainer.append("<a><img class='CloudMenuIcon GridIcon' src='Images/Menu Icons/Grid.png' title='View as Grid'/></a>");
+            menuSpanContainer.append("<a><img class='CloudMenuIcon ListIcon' src='Images/Menu Icons/List.png' title='View as List'/></a>");
             menuSpanContainer.append("<a><img class='CloudMenuIcon RefreshFolderMenuIcon' src='Images/Menu Icons/Refresh.png' title='Refresh' /></a>");
             menuSpanContainer.append("<a onclick='return SignOut(&quot;" + value.toString() + "&quot;)'><img class='CloudMenuIcon' src='Images/Menu Icons/Sign out.png' title='Sign Out'/></a>");
             //menuSpan.append("<a><img src='Images/Menu Icons/Refresh.png' /></a>");
             //menuSpan.append("<a><img src='Images/Menu Icons/Preview.png' /></a>");
             //menuSpan.append("<a class='SwitchLayoutLink'>View as List</a>");
             menuSpanContainer.append("<a><img class='CloudMenuIcon AddFolderMenuIcon' src='Images/Menu Icons/Add Folder.png' title='Add Folder'></a>");  // onclick='return AddFolderDialog(&quot;" + value.toString() + "&quot;, &quot;" + folderId.replace(new RegExp("'", "g"), "&apos;") + "&quot;);'
+        }
+        
+        var gridIcon = menuSpanContainer.find(".GridIcon");
+        var listIcon = menuSpanContainer.find(".ListIcon");
+
+        if (layout == 0) {
+            gridIcon.addClass("LayoutIconDisabled");
+            listIcon.removeClass("LayoutIconDisabled");
+            listIcon.unbind("click");
+            gridIcon.unbind("click");
+            listIcon.bind(
+            'click', function (e) {
+                cloudLayoutArray[cloudIndex] = 1;
+                RefreshFolder(value.toString(), folderId);
+            }
+            );
+        } else {
+            listIcon.addClass("LayoutIconDisabled");
+            gridIcon.removeClass("LayoutIconDisabled");
+            listIcon.unbind("click");
+            gridIcon.unbind("click");
+            gridIcon.bind(
+            'click', function (e) {
+                cloudLayoutArray[cloudIndex] = 0;
+                RefreshFolder(value.toString(), folderId);
+            }
+            );
         }
 
         var addFolder = menuSpanContainer.find(".AddFolderMenuIcon");
@@ -242,38 +271,72 @@ function ListContents(value, folderId) {
 
         var table = $("<table id='" + value.toString() + "TableItems' class='TableItems' style='margin:7px 1% 0px; max-width: 98%; position:relative;'></table>");
 
-        var row = $("<tr></tr>");
-        for (var k = 0; k < itemsCount; k++) {
-            var type = items[k].isFolder ? "Folder" : "File";
-            var dropdownOffset = itemWidth - 13;
-            var id = (items[k].Id != null) ? items[k].Id.replace(new RegExp("'", "g"), "&apos;") : null;
-            var cell = "<td class='" + type + "Cell' style='padding:6px 1px 10px; width:" + (itemWidth - 1) + "px; min-width:" + (itemWidth - 1) + "px; height:" + itemWidth + "px;'>" +
-                "<div style='display:table-cell'><div style='position:relative'><div class='DropdownArrow' style='left:" + dropdownOffset + "px;' type='" + type + "' known='" + items[k].IsKnownType + "'></div></div></div>" +
-                "<div id='item" + k + value + "' cloud='" + value + "' style='text-align:center; max-width:" + (itemWidth - 1) + "px;'>";
-            if (items[k].isFolder) {
-                cell += "<img fileId='" + id + "' class='FolderIcon' src='" + items[k].imageUrl + "' cloud='" + value + "' type='" + items[k].Type + "' " +
-                                                  "isBucket='" + items[k].isBucket + "' name='" + items[k].Name +"'/></div>"; // bucket='" + items[k].bucketName + "'
-            } else {
-                cell += "<img fileId='" + id + "' class='FileIcon' src='" + items[k].imageUrl + "' known='" + items[k].IsKnownType + "' cloud='" + value + "' type='" + items[k].Type + "' " +
-                                                  "isBucket='" + items[k].isBucket + "'/></div>"; // bucket='" + items[k].bucketName + "'
+        if (layout == 0) {
+
+            // Grid layout
+            var row = $("<tr></tr>");
+            for (var k = 0; k < itemsCount; k++) {
+                var type = items[k].isFolder ? "Folder" : "File";
+                var dropdownOffset = itemWidth - 13;
+                var id = (items[k].Id != null) ? items[k].Id.replace(new RegExp("'", "g"), "&apos;") : null;
+                var cell = "<td class='" + type + "Cell' style='padding:6px 1px 10px; width:" + (itemWidth - 1) + "px; min-width:" + (itemWidth - 1) + "px; height:" + itemWidth + "px;'>" +
+                    "<div style='display:table-cell'><div style='position:relative'><div class='DropdownArrow' style='left:" + dropdownOffset + "px;' type='" + type + "' known='" + items[k].IsKnownType + "'></div></div></div>" +
+                    "<div id='item" + k + value + "' cloud='" + value + "' style='text-align:center; max-width:" + (itemWidth - 1) + "px;'>";
+                if (items[k].isFolder) {
+                    cell += "<img fileId='" + id + "' class='FolderIcon' src='" + items[k].imageUrl + "' cloud='" + value + "' type='" + items[k].Type + "' " +
+                        "isBucket='" + items[k].isBucket + "' name='" + items[k].Name + "'/></div>"; // bucket='" + items[k].bucketName + "'
+                } else {
+                    cell += "<img fileId='" + id + "' class='FileIcon' src='" + items[k].imageUrl + "' known='" + items[k].IsKnownType + "' cloud='" + value + "' type='" + items[k].Type + "' " +
+                        "isBucket='" + items[k].isBucket + "'/></div>"; // bucket='" + items[k].bucketName + "'
+                }
+
+                cell += "<div style='width:100%; max-width:" + (itemWidth - 1) + "px; height:40px; text-align:center; text-size:12px; overflow-x:hidden; overflow-y:hidden;' title='" + items[k].Name + "'>" +
+                    items[k].Name + "</div></td>";
+
+                if ((k % itemsPerLine == 0)) {
+                    table.append(row);
+                    row = $("<tr></tr>");
+                }
+
+                if (k == itemsCount - 1) {
+                    row.append(cell);
+                    table.append(row);
+                    break;
+                }
+
+                row.append(cell);
             }
+        } else {
 
-            cell += "<div style='width:100%; max-width:" + (itemWidth - 1) + "px; height:40px; text-align:center; text-size:12px; overflow-x:hidden; overflow-y:hidden;' title='" + items[k].Name + "'>" +
-                items[k].Name + "</div></td>";
+            // List layout
 
-            if ((k % itemsPerLine == 0)) {
+            table.css({ "max-width": "96%", "min-width": "94%" });
+
+            var row = $("<tr></tr>");
+            for (var k = 0; k < itemsCount; k++) {
+                var type = items[k].isFolder ? "Folder" : "File";
+                //var dropdownOffset = itemWidth - 13;
+                var id = (items[k].Id != null) ? items[k].Id.replace(new RegExp("'", "g"), "&apos;") : null;
+                var cell = "<td class='" + type + "Cell' style='padding:6px 1px 10px; height:32px;'>" +
+                    "<div id='item" + k + value + "' cloud='" + value + "' style='width:100%; min-width:100%; display: inline'>";
+                if (items[k].isFolder) {
+                    cell += "<img fileId='" + id + "' class='FolderIcon' src='" + items[k].imageUrl + "' style='height:32px; width:32px; vertical-align:middle; margin-right:5px;' cloud='" + value + "' type='" + items[k].Type + "' " +
+                        "isBucket='" + items[k].isBucket + "' name='" + items[k].Name + "'/>"; // bucket='" + items[k].bucketName + "'
+                } else {
+                    cell += "<img fileId='" + id + "' class='FileIcon' src='" + items[k].imageUrl + "' known='" + items[k].IsKnownType + "' style='height:32px; width:32px; vertical-align:middle; margin-right:5px;' " +
+                        "cloud='" + value + "' type='" + items[k].Type + "' " + "isBucket='" + items[k].isBucket + "'/>"; // bucket='" + items[k].bucketName + "'
+                }
+
+                cell += "<span style='height:32px; text-size:12px; overflow-x:hidden; overflow-y:hidden;' title='" + items[k].Name + "'>" +
+                    items[k].Name + "</span></div></td>";
+
+                row.append(cell);
                 table.append(row);
                 row = $("<tr></tr>");
             }
-
-            if (k == itemsCount - 1) {
-                row.append(cell);
-                table.append(row);
-                break;
-            }
-
-            row.append(cell);
         }
+
+        container.css("{overflow-x:hidden; overflow-y:scroll;}");
         container.append(table);
 
         var folderIcons = container.find(".FolderIcon");
