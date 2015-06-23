@@ -390,6 +390,28 @@ namespace Disertatie
         }
 
         [WebMethod]
+        public static ResponsePackage CopyFileToAnotherCloud(string sourceCloud, string fileId, string name, string destinationCloud, string destinationFolder)
+        {
+            ResponsePackage ret = new ResponsePackage();
+
+            CloudStorageConsumer sourceCloudConsumer = HttpContext.Current.Session[sourceCloud.ToLower() + "Consumer"] as CloudStorageConsumer;
+            CloudStorageConsumer destinationCloudConsumer = HttpContext.Current.Session[destinationCloud.ToLower() + "Consumer"] as CloudStorageConsumer;
+
+            try
+            {
+                var stream = sourceCloudConsumer.GetDocument(fileId);
+                destinationCloudConsumer.SaveCreateDocument(stream, name, null, destinationFolder);
+            }
+            catch (Exception e)
+            {
+                ret.Error = true;
+                ret.ErrorMessage = "An error has occurred!";
+            }
+
+            return ret;
+        }
+
+        [WebMethod]
         public static string SignOut(string cloudService)
         {
             return (HttpContext.Current.Session[cloudService.ToLower() + "Consumer"] as CloudStorageConsumer).GetLogOutEndpoint();

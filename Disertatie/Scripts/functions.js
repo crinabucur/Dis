@@ -350,7 +350,7 @@ function ListContents(value, folderId) {
         });
 
 
-        var table = $("<table id='" + value.toString() + "TableItems' class='TableItems' style='margin:7px 1% 0px; max-width: 98%; position:relative;'></table>");
+        var table = $("<table id='" + value.toString() + "TableItems' class='TableItems' style='margin:7px 1% 0px; max-width: 98%; position:relative;' ondrop='drop(event)' ondragover='allowDrop(event)'></table>");
 
         if (layout == 0) {
 
@@ -364,11 +364,11 @@ function ListContents(value, folderId) {
                     "<div style='display:table-cell'><div style='position:relative'><div class='DropdownArrow' style='left:" + dropdownOffset + "px;' type='" + type + "' known='" + items[k].IsKnownType + "'></div></div></div>" +
                     "<div id='item" + k + value + "' cloud='" + value + "' style='text-align:center; max-width:" + (itemWidth - 1) + "px;'>";
                 if (items[k].isFolder) {
-                    cell += "<img fileId='" + id + "' class='FolderIcon' src='" + items[k].imageUrl + "' cloud='" + value + "' type='" + items[k].Type + "' " +
+                    cell += "<img draggable='false' fileId='" + id + "' class='FolderIcon' src='" + items[k].imageUrl + "' cloud='" + value + "' type='" + items[k].Type + "' " +
                         "isBucket='" + items[k].isBucket + "' name='" + items[k].Name + "'/></div>"; // bucket='" + items[k].bucketName + "'
                 } else {
-                    cell += "<img fileId='" + id + "' class='FileIcon' src='" + items[k].imageUrl + "' known='" + items[k].IsKnownType + "' cloud='" + value + "' type='" + items[k].Type + "' " +
-                        "isBucket='" + items[k].isBucket + "'/></div>"; // bucket='" + items[k].bucketName + "'
+                    cell += "<img draggable='true' ondragstart='drag(event)' fileId='" + id + "' class='FileIcon' src='" + items[k].imageUrl + "' known='" + items[k].IsKnownType + "' cloud='" + value + "' type='" + items[k].Type + "' " +
+                        "isBucket='" + items[k].isBucket + "' name='" + items[k].Name + "'/></div>"; // bucket='" + items[k].bucketName + "'
                 }
 
                 cell += "<div style='width:100%; max-width:" + (itemWidth - 1) + "px; height:40px; text-align:center; text-size:12px; overflow-x:hidden; overflow-y:hidden;' title='" + items[k].Name + "'>" +
@@ -405,13 +405,13 @@ function ListContents(value, folderId) {
                 var cell = "<td class='" + type + "Cell' style='padding:6px 1px 10px; height:32px;'>" +
                     "<div id='item" + k + value + "' cloud='" + value + "' style='width:100%; min-width:100%; display: inline'>";
                 if (items[k].isFolder) {
-                    cell += "<img fileId='" + id + "' class='FolderIcon' src='" + items[k].imageUrl + "' style='height:32px; width:32px; vertical-align:middle; margin-right:5px;' cloud='" + value + "' type='" + items[k].Type + "' " +
+                    cell += "<img draggable='false' fileId='" + id + "' class='FolderIcon' src='" + items[k].imageUrl + "' style='height:32px; width:32px; vertical-align:middle; margin-right:5px;' cloud='" + value + "' type='" + items[k].Type + "' " +
                         "isBucket='" + items[k].isBucket + "' name='" + items[k].Name + "'/>"; // bucket='" + items[k].bucketName + "'
                     cell += "<span fileId='" + id + "'  style='height:32px; text-size:12px; overflow-x:hidden; overflow-y:hidden;' class='FolderIcon' title='" + items[k].Name + "' name='" + items[k].Name + "' cloud='" + value + "' type='" + items[k].Type + "' " + "isBucket='" + items[k].isBucket + "'>" +
                     items[k].Name + "</span></div></td>";
                 } else {
-                    cell += "<img fileId='" + id + "' class='FileIcon' src='" + items[k].imageUrl + "' known='" + items[k].IsKnownType + "' style='height:32px; width:32px; vertical-align:middle; margin-right:5px;' " +
-                        "cloud='" + value + "' type='" + items[k].Type + "' " + "isBucket='" + items[k].isBucket + "'/>"; // bucket='" + items[k].bucketName + "'
+                    cell += "<img draggable='true' ondragstart='drag(event)' fileId='" + id + "' class='FileIcon' src='" + items[k].imageUrl + "' known='" + items[k].IsKnownType + "' style='height:32px; width:32px; vertical-align:middle; margin-right:5px;' " +
+                        "cloud='" + value + "' type='" + items[k].Type + "' " + "isBucket='" + items[k].isBucket + "' name='" + items[k].Name + "'/>"; // bucket='" + items[k].bucketName + "'
                     cell += "<span fileId='" + id + "' style='height:32px; text-size:12px; overflow-x:hidden; overflow-y:hidden;' class='FileIcon' known='" + items[k].IsKnownType + "' title='" + items[k].Name + "' name='" + items[k].Name + "' cloud='" + value + "' type='" + items[k].Type + "' " + "isBucket='" + items[k].isBucket + "'>" +
                     items[k].Name + "</span></div></td>";
                 }
@@ -606,6 +606,39 @@ function ListContents(value, folderId) {
                 }
                 
                 e.stopPropagation();
+            }
+        });
+    }
+}
+
+function allowDrop(ev) {
+    ev.preventDefault();
+}
+
+function drag(ev) {
+    //alert(ev.target.attributes["fileId"].nodeValue);
+    ev.dataTransfer.setData("fileId", ev.target.attributes["fileId"].nodeValue);
+    ev.dataTransfer.setData("fileName", ev.target.attributes["name"].nodeValue);
+    ev.dataTransfer.setData("cloud", ev.target.attributes["cloud"].nodeValue);
+}
+
+function drop(ev) {
+    ev.preventDefault();
+    var fileId = ev.dataTransfer.getData("fileId");
+    var cloud = ev.dataTransfer.getData("cloud");
+    var name = ev.dataTransfer.getData("fileName");
+    var destinationCloud = ev.currentTarget.attributes["id"].nodeValue.replace("TableItems", "");
+    if (cloud != destinationCloud) {
+        var currentFolder = $("#gridCell" + destinationCloud).attr("currentfolder");
+        //alert(currentFolder);
+        $('body').toggleClass('waiting');
+        PageMethods.CopyFileToAnotherCloud(cloud, fileId, name, destinationCloud, currentFolder, function (response) { 
+            if (response.Error) {
+                $('body').toggleClass('waiting');
+                showError(response.ErrorMessage);
+            } else {
+                $('body').toggleClass('waiting');
+                RefreshFolder(destinationCloud, currentFolder);
             }
         });
     }
