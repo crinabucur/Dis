@@ -424,7 +424,7 @@ function MoveOrCopyDialog(callingItem) {
             {
                 text: "Move",
                 click: function () {
-                    PageMethods.MoveFilesAndFolders([fileId], $("#tree3").dynatree("getActiveNode").data.key, cloud, function (resp) {  /// List<string> ids, string newParentId, string cloud //TODO: error if no node selected
+                    PageMethods.MoveFilesAndFolders([fileId], $("#tree3").dynatree("getActiveNode").data.key, cloud, function (resp) { 
                         CloseModalDialog();
                         var cloudContainer = $("#gridCell" + cloud);
                         var currentFolder = cloudContainer.attr("currentfolder");
@@ -436,6 +436,79 @@ function MoveOrCopyDialog(callingItem) {
                 text: "Copy",
                 click: function () {
                     // TODO: add
+                }
+            },
+            {
+                text: "Cancel",
+                click: function () {
+                    // Dismiss the modal dialog.
+                    CloseModalDialog();
+                }
+            }
+        ]);
+
+        // The dialog is set up. Time to present the dialog.
+        ShowModalDialog(dialogHeight, dialogWidth);
+    });
+}
+
+function LocalUploadToCloudDialog(cloud) {
+    // GetLocalUploads()
+    PageMethods.GetLocalUploads(function (response) {
+        if (response.Error) {
+            ShowError(response.ErrorMessage);
+            return;
+        }
+
+        var objectWidth = 520;
+        var objectHeight = 120;
+
+        var dialogPaddingWidth = 50;
+        var dialogPaddingHeight = 20;
+
+        var dialogWidth = objectWidth + dialogPaddingWidth;
+        var dialogHeight = objectHeight + dialogPaddingHeight;
+
+        CreateModalDialog(dialogHeight, dialogWidth, "Select files to copy");
+
+        // Set the modal dialog content
+        $ModalDialogContent.append("<div id='FilesList' style='text-align:left; margin-top:10px; font-size:14px; font-weight:bold, overflow-y:auto;'></div>");
+        var content = $ModalDialogContent.find("#FilesList");
+
+        for (var i = 0; i < response.length; i++) {
+            var name = response[i].toString();
+            content.append("<input style='margin-left:5px;' type='checkbox' class='CopyCheckbox' name='" + name + "' value='" + name + "'>" + " " + name + "<br>");
+        }
+
+        //  Set dialog buttons and actions.
+        SetModalDialogOption("buttons", [
+            {
+                text: "Copy",
+                click: function () {
+                    var selectedCheckboxes = [];
+                    $('input:checkbox.CopyCheckbox').each(function () {
+                        //var sThisVal = (this.checked ? $(this).val() : "");
+                        if (this.checked) {
+                            selectedCheckboxes.push($(this).val());
+                        }
+                        var cloudContainer = $("#gridCell" + cloud);
+                        var currentCloudFolder = cloudContainer.attr("currentfolder");
+                        if (typeof (currentCloudFolder) == "undefined") {
+                            currentCloudFolder = "";
+                        }
+                        $('body').toggleClass('waiting');
+                        PageMethods.UploadToCloud(selectedCheckboxes, cloud, currentCloudFolder, function (resp) {
+                            
+                            CloseModalDialog();
+                            if (resp.Error) {
+                                $('body').toggleClass('waiting');
+                                showError(resp.ErrorMessage);
+                            } else {
+                                $('body').toggleClass('waiting');
+                                RefreshFolder(cloud, currentCloudFolder);
+                            }
+                        });
+                    });
                 }
             },
             {

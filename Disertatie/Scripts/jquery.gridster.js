@@ -1321,7 +1321,8 @@
         var cloudimage = widget.find(($("#" + cloud)));
         if ((cloudimage.length < 1 || !cloudimage.is(":visible")) && (cloud != "Device"))
             widget.append("<img src='Images/loader.gif' class='Loader' />");
-        ListContents(cloud, widget.attr("currentFolder")); // TODO: optimize this; no need to retrieve all the items again, just rearrange them.
+        if (cloud != "Device")
+            ListContents(cloud, widget.attr("currentFolder")); // TODO: optimize this; no need to retrieve all the items again, just rearrange them.
         SetLayoutCookie();
     };
 

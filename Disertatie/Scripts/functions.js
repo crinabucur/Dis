@@ -45,6 +45,8 @@ $(document).ready(function () {
                     ListContents(cloudsArray[i], null);
         }
 
+        ShowDevice();
+
         if($("div.error")[0]){
             createError($("div.error"));
         }
@@ -104,11 +106,68 @@ function setCookie(cname, cvalue, exdays) {
     document.cookie = cname + "=" + cvalue + "; " + expires;
 }
 
+function ShowDevice() {
+    var uploader = new qq.FileUploader({
+        element: $("#FileUploadContainer")[0],
+        action: 'Handlers/FileUploadHandler.ashx', // ?formName=' + new Date().getTime()
+        multiple: true,
+        sizeLimit: 20971520, // 20 MB
+        uploadButtonText: "Upload a file", //"<table style='margin:0 auto; border-collapse:collapse;border-spacing:0;'><tr><td width='30%'><img style='height:300px; display:block' src='Images/UploadIcon.png'/></td><td width='70%' style='font-size:large; font-weight: bold; color:#46443E'>Browse Device</td></tr></table>",
+        onComplete: function (id, filename, result) {
+            $('#progress').hide();
+            $("#gridCellDevice").find(".RemoveUploadedFilesButton").show();
+            $("#gridCellDevice").find(".CopyTo").show();
+            if (result.success) {
+                CloseModalDialog();
+                
+                //  call the actual open file method
+                //if (result.success.substring)
+                //    alert(result.success);
+                //OpenFile();
+            }
+            else if (result.password) {
+                $('#browse').hide();
+                $('#passRow').show();
+                $('#pass').focus().val('');
+            }
+            else if (result.sizeError) {
+                CloseModalDialog();
+                //var sizeLimit = formatSize(projectSize);
+                //alert(filename + " is too large, maximum file size is 20MB.");
+                showError(filename + " is too large, maximum file size is 20MB.");
+            }
+        }
+    });
+
+    var container = $("#FileUploadContainer");
+    container.append("<span class='CopyTo' style='display:none; margin-left:10px; margin-bottom:10px;'>Copy uploads to: <select id='cloudselect' name='cloud' style='width:150px; height:24px;'>" + // $("#gridCellDevice").append
+        "<option disabled selected> -- select an option -- </option><option value='GoogleDrive'>Google Drive</option><option value='Box'>Box</option>" +
+        "<option value='Dropbox'>Dropbox</option><option value='AmazonS3'>Amazon S3</option><option value='SharePoint'>SharePoint</option>" +
+        "<option value='BaseCamp'>BaseCamp</option><option value='OneDrive'>OneDrive</option></span>");
+    container.append("<div class='RemoveUploadedFilesButton' style='display:none' onclick='return DiscardUploads();'>Discard Files</div></select></span>"); // $("#gridCellDevice").append
+    
+    $("#cloudselect").change(function () {
+        $("select option:selected").each(function () {
+            LocalUploadToCloudDialog($(this).val());
+        });
+    });
+}
+
+function DiscardUploads() {
+    PageMethods.DiscardLocalUploads(function () {
+        //var container = $("#gridCellDevice").find(".FileUploadContainer")[0];
+        //container.empty();
+        ShowDevice();
+    });
+}
+
 function ListContents(value, folderId) {
     if ($("#" + value.toString()).length == 0 || !($("#" + value.toString()).is(":visible"))) { // if the cloud is logged in and the page is Default
 
-        if (value == "Device")
-            return; // TODO: call specific function
+        if (value == "Device") {
+            ShowDevice();
+            return;
+        }
 
         var container = $('#gridCell' + value.toString());
         var menuSpan = container.find('.CloudMenuSpan');

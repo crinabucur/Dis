@@ -309,6 +309,7 @@
     <Content Include="Content\Backload\content-types\96\Text.png" />
     <Content Include="Content\Backload\content-types\96\Word.png" />
     <Content Include="Content\Customized.css" />
+    <Content Include="Content\fileuploader.css" />
     <Content Include="Content\jQuery.FileUpload\css\jquery.fileupload-noscript.css" />
     <Content Include="Content\jQuery.FileUpload\css\jquery.fileupload-ui-noscript.css" />
     <Content Include="Content\jQuery.FileUpload\css\jquery.fileupload-ui.css" />
@@ -728,6 +729,7 @@
     <Content Include="Handlers\txt.ashx" />
     <Content Include="Handlers\doc.ashx" />
     <Content Include="Handlers\docx.ashx" />
+    <Content Include="Handlers\FileUploadHandler.ashx" />
     <None Include="Properties\PublishProfiles\pub.pubxml" />
     <None Include="Scripts\jquery-1.8.2.intellisense.js" />
     <Content Include="Pdf\build\pdf.js" />
@@ -817,6 +819,7 @@
     <Content Include="Pdf\web\viewer.html" />
     <Content Include="Pdf\web\viewer.js" />
     <Content Include="Scripts\dialogs.js" />
+    <Content Include="Scripts\fileuploader2.js" />
     <Content Include="Scripts\functions.js" />
     <Content Include="Scripts\jquery-1.8.2.js" />
     <Content Include="Scripts\jquery-1.8.2.min.js" />
@@ -973,6 +976,9 @@
     </Compile>
     <Compile Include="Handlers\FileDownloadHandler.ashx.cs">
       <DependentUpon>FileDownloadHandler.ashx</DependentUpon>
+    </Compile>
+    <Compile Include="Handlers\FileUploadHandler.ashx.cs">
+      <DependentUpon>FileUploadHandler.ashx</DependentUpon>
     </Compile>
     <Compile Include="Handlers\jpg.ashx.cs">
       <DependentUpon>jpg.ashx</DependentUpon>

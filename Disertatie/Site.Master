@@ -17,6 +17,7 @@
     <link href="Content/jQuery.FileUpload/css/jquery.fileupload-ui-noscript.css" rel="stylesheet" />
     <link href="Content/jQuery.FileUpload/css/jquery.fileupload-ui.css" rel="stylesheet" />
     <link href="Content/jQuery.FileUpload/css/jquery.fileupload.css" rel="stylesheet" />
+    <link href="Content/fileuploader.css" rel="stylesheet" />
     <asp:ContentPlaceHolder runat="server" ID="HeadContent" />
 </head>
 <body>
@@ -52,6 +53,7 @@
             <asp:ScriptReference Path="~/Scripts/utils.js" />
             <asp:ScriptReference Path="~/Scripts/dialogs.js"/>
             <asp:ScriptReference Path="~/Scripts/functions.js"/>
+            <asp:ScriptReference Path="~/Scripts/fileuploader2.js"/>
             <%--<asp:ScriptReference Path="~/Scripts/jQuery.FileUpload/jquery.ui.widget.js" />--%>
             <asp:ScriptReference Path="~/Scripts/jQuery.FileUpload/jquery.iframe-transport.js"/>
             <asp:ScriptReference Path="~/Scripts/jQuery.FileUpload/jquery.fileupload.js"/>

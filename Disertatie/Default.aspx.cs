@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.Eventing.Reader;
@@ -31,6 +32,20 @@ namespace Disertatie
         {
             #region Initialization
             Session["url"] = Request.Path;
+
+            if (HttpContext.Current.Session["localUploads"] == null)
+            {
+                HttpContext.Current.Session["localUploads"] = new Dictionary<string, Stream>();
+            }
+            else
+            {
+                var dictionary = HttpContext.Current.Session["localUploads"] as Dictionary<string, Stream>;
+                try
+                {
+                    dictionary.Clear();
+                }
+                catch { }
+            }
             #endregion
 
             #region Office 365 SharePoint login
@@ -274,6 +289,70 @@ namespace Disertatie
             if (cloudConsumer == null) return null;
 
             return cloudConsumer.AddFolder(parentFolderId, _name);
+        }
+
+        [WebMethod]
+        public static ArrayList GetLocalUploads()
+        {
+            var list = new ArrayList();
+            var dict = HttpContext.Current.Session["localUploads"] as Dictionary<string, Stream>;
+
+            foreach (var key in dict.Keys)
+            {
+                list.Add(key);
+            }
+
+            return list;
+        }
+
+        [WebMethod]
+        public static void DiscardLocalUploads()
+        {
+            var dictionary = HttpContext.Current.Session["localUploads"] as Dictionary<string, Stream>;
+            try
+            {
+                dictionary.Clear();
+            }
+            catch { }
+        }  
+
+        [WebMethod]
+        public static ResponsePackage UploadToCloud(string[] list, string cloud, string currentCloudFolder)
+        {
+            var ret = new ResponsePackage();
+            var cloudConsumer = HttpContext.Current.Session[cloud.ToLower() + "Consumer"] as CloudStorageConsumer;
+            if (cloudConsumer == null)
+            {
+                ret.Error = true;
+                ret.ErrorMessage = "An error has occurred.";
+                return ret;
+            }
+            
+            if (!cloudConsumer.TokenIsOk())
+            {
+                ret.Error = true;
+                ret.ErrorMessage = "You are not logged in into " + cloud + "!";
+                return ret;
+            }
+
+            var dict = HttpContext.Current.Session["localUploads"] as Dictionary<string, Stream>;
+
+            foreach (var filename in list)
+            {
+                try
+                {
+                    var stream = dict[filename];
+                    cloudConsumer.SaveCreateDocument(stream, filename, null, currentCloudFolder);
+                }
+                catch
+                {
+                    ret.Error = true;
+                    ret.ErrorMessage = "An error has occurred.";
+                    return ret;
+                }
+            }
+
+            return ret;
         }
 
         [WebMethod]
