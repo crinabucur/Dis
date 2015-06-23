@@ -407,7 +407,6 @@
     <Content Include="Images\File Icons\rar.png" />
     <Content Include="Images\File Icons\txt.png" />
     <Content Include="Images\File Icons\zip.png" />
-    <Content Include="Images\folderIcon_32x32.png" />
     <Content Include="Images\folderIcon_64x64.png" />
     <Content Include="Images\googleDrive.png" />
     <Content Include="Images\googledrive_mini.png" />
