@@ -2,6 +2,7 @@
 var FoldersBreadcrumbs = [];
 var cloudsArray = ["GoogleDrive", "OneDrive", "Dropbox", "Box", "SharePoint", "AmazonS3", "BaseCamp"]; //, "Device"];
 var cloudRootsArray = ["root", "me/skydrive/", "/", "0", "", "_", "basecamp_root"]; //, "Device"];
+var cloudLayoutArray = [0, 0, 0, 0, 0, 0, 0]; // 0 - grid, 1 - list
 
 $(function initialize() {
     //  initialize the global variables used for dialog windows
@@ -115,9 +116,14 @@ function ListContents(value, folderId) {
 
         // remove existing items
         container.find(".TableItems").remove();  //container.find(".TableItems, .SwitchLayoutLink, .CloudMiniIcon").remove();
-        //menuSpanContainer.empty();
 
         menuSpan.show();
+
+        if (container.find(".ScrollableContainer").length == 0) {
+            container.append("<div class='ScrollableContainer' style='height:100%; overflow-y:auto;'></div>");
+        }
+
+        var scrollableContainer = container.find(".ScrollableContainer");
 
         // determine item width
         var width = container.width();
@@ -125,7 +131,7 @@ function ListContents(value, folderId) {
         var itemWidth = Math.floor((width - 10) / itemsPerLine);
 
         var cloudIndex = cloudsArray.indexOf(value);
-        //alert(cloudIndex);
+        var layout = cloudLayoutArray[cloudIndex];
 
         folderId = folderId || null;
         if (folderId == null) {
@@ -179,21 +185,66 @@ function ListContents(value, folderId) {
 
         if(folderId != cloudRootsArray[cloudIndex])
         {
-            var goBackFolder = { isFolder: true, Name: "..", Id: "..", imageUrl: "Images/folderIcon_64x64.png" }; // TODO: support for list mode
+            var goBackFolder = (layout == 0) ? { isFolder: true, Name: "..", Id: "..", imageUrl: "Images/folderIcon_64x64.png" }
+                                             : { isFolder: true, Name: "..", Id: "..", imageUrl: "Images/folderIcon_32x32.png" }; 
             items.unshift(goBackFolder);
             itemsCount++;
         }
 
         if (menuSpanContainer.find(".CloudMiniIcon").length == 0) {
             menuSpanContainer.append("<img src='Images/" + value.toString().toLowerCase() + "_mini.png' class='CloudMiniIcon' title='" + value + "'/>");
-            menuSpanContainer.append("<a><img class='CloudMenuIcon' src='Images/Menu Icons/Grid.png' title='View as Grid'/></a>");
-            menuSpanContainer.append("<a><img class='CloudMenuIcon' src='Images/Menu Icons/List.png' title='View as List'/></a>");
+            menuSpanContainer.append("<a><img class='CloudMenuIcon GridIcon' src='Images/Menu Icons/Grid.png' title='View as Grid'/></a>");
+            menuSpanContainer.append("<a><img class='CloudMenuIcon ListIcon' src='Images/Menu Icons/List.png' title='View as List'/></a>");
             menuSpanContainer.append("<a><img class='CloudMenuIcon RefreshFolderMenuIcon' src='Images/Menu Icons/Refresh.png' title='Refresh' /></a>");
             menuSpanContainer.append("<a onclick='return SignOut(&quot;" + value.toString() + "&quot;)'><img class='CloudMenuIcon' src='Images/Menu Icons/Sign out.png' title='Sign Out'/></a>");
             //menuSpan.append("<a><img src='Images/Menu Icons/Refresh.png' /></a>");
             //menuSpan.append("<a><img src='Images/Menu Icons/Preview.png' /></a>");
             //menuSpan.append("<a class='SwitchLayoutLink'>View as List</a>");
             menuSpanContainer.append("<a><img class='CloudMenuIcon AddFolderMenuIcon' src='Images/Menu Icons/Add Folder.png' title='Add Folder'></a>");  // onclick='return AddFolderDialog(&quot;" + value.toString() + "&quot;, &quot;" + folderId.replace(new RegExp("'", "g"), "&apos;") + "&quot;);'
+        }
+
+        var miniCloudIcon = menuSpanContainer.find(".CloudMiniIcon");
+        miniCloudIcon.unbind("click");
+        miniCloudIcon.bind(
+            'click', function (e) {
+                // empty the array
+                FoldersBreadcrumbs[cloudIndex] = [];
+
+                var rootId = cloudRootsArray[cloudIndex];
+
+                FoldersBreadcrumbs[cloudIndex].push({
+                    name: "/",
+                    id: rootId
+                });
+                RefreshFolder(value.toString(), rootId);
+            }
+        );
+        
+        var gridIcon = menuSpanContainer.find(".GridIcon");
+        var listIcon = menuSpanContainer.find(".ListIcon");
+
+        if (layout == 0) {
+            gridIcon.addClass("LayoutIconDisabled");
+            listIcon.removeClass("LayoutIconDisabled");
+            listIcon.unbind("click");
+            gridIcon.unbind("click");
+            listIcon.bind(
+            'click', function (e) {
+                cloudLayoutArray[cloudIndex] = 1;
+                RefreshFolder(value.toString(), folderId);
+            }
+            );
+        } else {
+            listIcon.addClass("LayoutIconDisabled");
+            gridIcon.removeClass("LayoutIconDisabled");
+            listIcon.unbind("click");
+            gridIcon.unbind("click");
+            gridIcon.bind(
+            'click', function (e) {
+                cloudLayoutArray[cloudIndex] = 0;
+                RefreshFolder(value.toString(), folderId);
+            }
+            );
         }
 
         var addFolder = menuSpanContainer.find(".AddFolderMenuIcon");
@@ -242,40 +293,79 @@ function ListContents(value, folderId) {
 
         var table = $("<table id='" + value.toString() + "TableItems' class='TableItems' style='margin:7px 1% 0px; max-width: 98%; position:relative;'></table>");
 
-        var row = $("<tr></tr>");
-        for (var k = 0; k < itemsCount; k++) {
-            var type = items[k].isFolder ? "Folder" : "File";
-            var dropdownOffset = itemWidth - 13;
-            var id = (items[k].Id != null) ? items[k].Id.replace(new RegExp("'", "g"), "&apos;") : null;
-            var cell = "<td class='" + type + "Cell' style='padding:6px 1px 10px; width:" + (itemWidth - 1) + "px; min-width:" + (itemWidth - 1) + "px; height:" + itemWidth + "px;'>" +
-                "<div style='display:table-cell'><div style='position:relative'><div class='DropdownArrow' style='left:" + dropdownOffset + "px;' type='" + type + "' known='" + items[k].IsKnownType + "'></div></div></div>" +
-                "<div id='item" + k + value + "' cloud='" + value + "' style='text-align:center; max-width:" + (itemWidth - 1) + "px;'>";
-            if (items[k].isFolder) {
-                cell += "<img fileId='" + id + "' class='FolderIcon' src='" + items[k].imageUrl + "' cloud='" + value + "' type='" + items[k].Type + "' " +
-                                                  "isBucket='" + items[k].isBucket + "' name='" + items[k].Name +"'/></div>"; // bucket='" + items[k].bucketName + "'
-            } else {
-                cell += "<img fileId='" + id + "' class='FileIcon' src='" + items[k].imageUrl + "' known='" + items[k].IsKnownType + "' cloud='" + value + "' type='" + items[k].Type + "' " +
-                                                  "isBucket='" + items[k].isBucket + "'/></div>"; // bucket='" + items[k].bucketName + "'
+        if (layout == 0) {
+
+            // Grid layout
+            var row = $("<tr></tr>");
+            for (var k = 0; k < itemsCount; k++) {
+                var type = items[k].isFolder ? "Folder" : "File";
+                var dropdownOffset = itemWidth - 13;
+                var id = (items[k].Id != null) ? items[k].Id.replace(new RegExp("'", "g"), "&apos;") : null;
+                var cell = "<td class='" + type + "Cell' style='padding:6px 1px 10px; width:" + (itemWidth - 1) + "px; min-width:" + (itemWidth - 1) + "px; height:" + itemWidth + "px;'>" +
+                    "<div style='display:table-cell'><div style='position:relative'><div class='DropdownArrow' style='left:" + dropdownOffset + "px;' type='" + type + "' known='" + items[k].IsKnownType + "'></div></div></div>" +
+                    "<div id='item" + k + value + "' cloud='" + value + "' style='text-align:center; max-width:" + (itemWidth - 1) + "px;'>";
+                if (items[k].isFolder) {
+                    cell += "<img fileId='" + id + "' class='FolderIcon' src='" + items[k].imageUrl + "' cloud='" + value + "' type='" + items[k].Type + "' " +
+                        "isBucket='" + items[k].isBucket + "' name='" + items[k].Name + "'/></div>"; // bucket='" + items[k].bucketName + "'
+                } else {
+                    cell += "<img fileId='" + id + "' class='FileIcon' src='" + items[k].imageUrl + "' known='" + items[k].IsKnownType + "' cloud='" + value + "' type='" + items[k].Type + "' " +
+                        "isBucket='" + items[k].isBucket + "'/></div>"; // bucket='" + items[k].bucketName + "'
+                }
+
+                cell += "<div style='width:100%; max-width:" + (itemWidth - 1) + "px; height:40px; text-align:center; text-size:12px; overflow-x:hidden; overflow-y:hidden;' title='" + items[k].Name + "'>" +
+                    items[k].Name + "</div></td>";
+
+                if ((k % itemsPerLine == 0)) {
+                    table.append(row);
+                    row = $("<tr></tr>");
+                }
+
+                if (k == itemsCount - 1) {
+                    row.append(cell);
+                    table.append(row);
+                    break;
+                }
+
+                row.append(cell);
             }
 
-            cell += "<div style='width:100%; max-width:" + (itemWidth - 1) + "px; height:40px; text-align:center; text-size:12px; overflow-x:hidden; overflow-y:hidden;' title='" + items[k].Name + "'>" +
-                items[k].Name + "</div></td>";
+            scrollableContainer.css("overflow-y", "hidden");
+            scrollableContainer.append(table);
 
-            if ((k % itemsPerLine == 0)) {
+        } else {
+
+            // List layout
+
+            table.css({ "max-width": "96%", "min-width": "94%" });
+
+            var row = $("<tr></tr>");
+            for (var k = 0; k < itemsCount; k++) {
+                var type = items[k].isFolder ? "Folder" : "File";
+                //var dropdownOffset = itemWidth - 13;
+                var id = (items[k].Id != null) ? items[k].Id.replace(new RegExp("'", "g"), "&apos;") : null;
+                var cell = "<td class='" + type + "Cell' style='padding:6px 1px 10px; height:32px;'>" +
+                    "<div id='item" + k + value + "' cloud='" + value + "' style='width:100%; min-width:100%; display: inline'>";
+                if (items[k].isFolder) {
+                    cell += "<img fileId='" + id + "' class='FolderIcon' src='" + items[k].imageUrl + "' style='height:32px; width:32px; vertical-align:middle; margin-right:5px;' cloud='" + value + "' type='" + items[k].Type + "' " +
+                        "isBucket='" + items[k].isBucket + "' name='" + items[k].Name + "'/>"; // bucket='" + items[k].bucketName + "'
+                    cell += "<span fileId='" + id + "'  style='height:32px; text-size:12px; overflow-x:hidden; overflow-y:hidden;' class='FolderIcon' title='" + items[k].Name + "' name='" + items[k].Name + "' cloud='" + value + "' type='" + items[k].Type + "' " + "isBucket='" + items[k].isBucket + "'>" +
+                    items[k].Name + "</span></div></td>";
+                } else {
+                    cell += "<img fileId='" + id + "' class='FileIcon' src='" + items[k].imageUrl + "' known='" + items[k].IsKnownType + "' style='height:32px; width:32px; vertical-align:middle; margin-right:5px;' " +
+                        "cloud='" + value + "' type='" + items[k].Type + "' " + "isBucket='" + items[k].isBucket + "'/>"; // bucket='" + items[k].bucketName + "'
+                    cell += "<span fileId='" + id + "' style='height:32px; text-size:12px; overflow-x:hidden; overflow-y:hidden;' class='FileIcon' known='" + items[k].IsKnownType + "' title='" + items[k].Name + "' name='" + items[k].Name + "' cloud='" + value + "' type='" + items[k].Type + "' " + "isBucket='" + items[k].isBucket + "'>" +
+                    items[k].Name + "</span></div></td>";
+                }
+                
+                row.append(cell);
                 table.append(row);
                 row = $("<tr></tr>");
             }
 
-            if (k == itemsCount - 1) {
-                row.append(cell);
-                table.append(row);
-                break;
-            }
-
-            row.append(cell);
+            scrollableContainer.css("overflow-y", "auto");
+            scrollableContainer.append(table);
         }
-        container.append(table);
-
+        
         var folderIcons = container.find(".FolderIcon");
         folderIcons.bind(
             'click', function (e) {
@@ -482,7 +572,7 @@ function ShowContextualMenu(callingItem) {
         var name = icon.attr("name");
 
         options = "<li id='menuOptionOpenFolder'>Open</li>";
-        options += (name != "..") ? "<li id='menuOptionDownloadFolder'>Download</li>" : "<li class='ui-state-disabled'>Download</li>";
+        //options += (name != "..") ? "<li id='menuOptionDownloadFolder'>Download</li>" : "<li class='ui-state-disabled'>Download</li>";
         options += (name != "..") ? "<li id='menuOptionRemoveFolder'>Remove Folder</li>" : "<li class='ui-state-disabled'>Remove Folder</li>";
     }
 
@@ -644,302 +734,6 @@ function callLogOutIframe(url, callback) {
 
 function RefreshFolder(cloud, currentFolder) {
     ListContents(cloud, currentFolder);
-}
-
-
-function ListFiles(container, cloudService, callback, saveMode, filename) {
-    PageMethods.GetFilePickerLabels(saveMode, function (response) {
-        
-        if (saveMode == undefined)
-            saveMode = false;
-
-        //if (window.location.href.toLowerCase().indexOf("pviews.aspx") != -1) {
-        //    CloseModalDialog();
-        //    var dialogWidth = dial_width - 100;
-        //    var dialogHeight = dial_height - 80;
-        //} else {
-            var objectWidth = container.width - 10; //820;
-            var objectHeight = container.height - 20;  //400;
-
-            //var dialogPaddingWidth = 40;
-            //var dialogPaddingHeight = 30;
-
-            //var dialogWidth = objectWidth + dialogPaddingWidth;
-            //var dialogHeight = objectHeight + dialogPaddingHeight;
-        //}
-
-        //var dialogTitle = ((saveMode) ? response.SaveAsLabel : response.ChooseDocumentLabel);
-
-        //CreateModalDialog(dialogHeight, dialogWidth, cloudService + " - " + dialogTitle);
-        //$ModalDialogContent.css('height', '100%');
-        //$ModalDialogContent.css('width', '100%');
-        //SetModalDialogOption("buttons", [
-        //    {
-        //        text: response.OptionsButtonLabel,
-        //        click: function () {
-        //            FilePublishDialog(cloudService, callback, saveMode, extensions, response.OptionsButtonLabel, $(".ui-dialog-buttonpane #fileNameInput").val());
-        //        }
-        //    },
-        //    {
-        //        text: ((saveMode) ? response.SaveButtonLabel : response.OpenButtonLabel),
-        //        click: function () {
-        //            if ($("#ModalDialogContent .selectedFile").length > 0) {
-        //                var fileId = $("#ModalDialogContent .selectedFile").attr('fileId');
-        //                var fileName = (selectedLayoutIcon == "listIcon") ? $("#ModalDialogContent .selectedFile").text() : $("#ModalDialogContent .selectedFile").next().text();
-        //                CloseModalDialog();
-        //                callback(fileId, fileName);
-        //            } else {
-        //                if (saveMode) {
-        //                    // save to current folder 
-        //                    var name = $(".ui-dialog-buttonpane #fileNameInput").val();
-        //                    if (name == "") {
-        //                        alert(response.MissingFileName);
-        //                    } else {
-        //                        var ext = $(".ui-dialog-buttonpane #extensionDropdown option:selected").text();
-        //                        var currentFolder;
-        //                        if (FoldersBreadcrumbs.length > 0) currentFolder = FoldersBreadcrumbs[FoldersBreadcrumbs.length - 1];
-
-        //                        var fullName;
-        //                        if (name.lastIndexOf(ext) == name.length - ext.length) { // if the filename ends with the selected extension
-        //                            fullName = name;
-        //                            name = name.substring(0, name.lastIndexOf(ext));
-        //                        } else {
-        //                            fullName = name + ext;
-        //                        }
-
-        //                        // search for existing items with the same name
-        //                        var existingItem;
-        //                        if (selectedLayoutIcon == "listIcon") {
-        //                            $("#ModalDialog .selectableFile").each(function () {
-        //                                if ($(this).text() == fullName) {
-        //                                    existingItem = this;
-        //                                    return false;
-        //                                }
-        //                            });
-        //                        } else {
-        //                            $("#ModalDialog .subText").each(function () {
-        //                                if ($(this).text() == fullName) {
-        //                                    existingItem = this;
-        //                                    return false;
-        //                                }
-        //                            });
-        //                        }
-
-        //                        if (existingItem != undefined) {
-        //                            var r = confirm(fullName + " " + response.FileAlreadyExists);
-        //                            if (r == false) {
-        //                                return;
-        //                            }
-        //                        }
-
-        //                        var fileType = ext.replace(".", "");
-        //                        ShowStandbyDialog("(" + cloudService + ") " + SavingText, false);
-        //                        PageMethods.SaveCloudNewDocument(cloudService, name, fileType, currentFolder.id, function (resp) {
-        //                            if (resp.SessionExpired) {
-        //                                ShowError(sessionExpiredErrorMessage);
-        //                                return;
-        //                            }
-        //                            if (resp.Error) {
-        //                                ShowError(resp.ErrorMessage);
-        //                                return;
-        //                            }
-        //                            MppFileName = resp.mppFileName;
-        //                            document.title = resp.pageTitle;
-        //                            var pt = document.getElementById('ProjectTitle');
-        //                            if (pt != null) pt.innerHTML = resp.pageHeader;
-        //                            ShowStandbyDialog("(" + cloudService + ") " + resp.SuccessMessage, true);
-        //                            $ModalDialogContent.click(function () { CloseModalDialog(); });
-        //                        });
-        //                    }
-        //                }
-        //            }
-        //        }
-        //    },
-        //    {
-        //        text: cancelLabel,
-        //        click: function () { $(this).dialog("close"); }
-        //    }]);
-
-        var div = $("<table style='display:table;table-layout:fixed; width:100%; height:100%'/>");
-        //var breadcrumbsDiv = $("<td style='width: 100%; height:40px; border-bottom: 1px solid #A6C9E2; font-size: large; background: url(Images/FilePicker/" + cloudService.toLowerCase() + ".png) no-repeat left center; text-align: left; padding-left:40px'>" + cloudService + "<div style='float:right; height:70%; display:inline'>" +
-        //                            "<img id='listIcon' class='layoutStyle' src='Images/FilePicker/listIcon.png' title='List view layout'>&nbsp;<img id='gridIcon' style='background-color:#ADD8E6' class='layoutStyle' src='Images/FilePicker/gridIcon.png' title='Grid view layout'>&nbsp;&nbsp;&nbsp;</div></td>");
-
-        var content;
-        //if (window.location.href.toLowerCase().indexOf("pviews.aspx") != -1)
-        //    content = $("<div style='margin: 0 auto; width:96%; height:100%; overflow-y:auto; overflow-x:hidden; border: 1px solid #cccccc; background-color:#fafafa; text-align: left'>");
-        //else
-            content = $("<div style='margin: 0 auto; width:90%; height:80%; overflow-y:auto; overflow-x:hidden;'/>");
-
-        div.append($("<tr>").append(breadcrumbsDiv));
-        div.append($("<tr>").append($("<td style='height:" + (dialogHeight - 48) + "px; white-space:nowrap'>").append(content)));
-        //$ModalDialogContent.html(div);
-        content.append(div);
-
-        //ShowModalDialog(dialogHeight, dialogWidth);
-        //$("#ModalDialog").css("overflow-x", "hidden");
-        //$("#ModalDialog").css("-ms-overflow-y", "hidden"); // attempt to fix IE11 scrolling on outer container instead (still happening)
-
-        var availablePx = dialogWidth - $(".ui-dialog-buttonset").width() - 125;
-        var fileNameTextBox = "<input id='fileNameInput' type='text' style='width:" + availablePx + "px; height:16px; position: relative; top: 12px; left: 5px; border-color: lightgray;' onkeyup='filenameChange()'/>";
-        var extensionDropdown = "<select id='extensionDropdown' style='width:65px; position:relative; top:12px; left:15px;' >";
-
-        // build extensions dropdown
-        if (extensions != null) {
-            $.each(extensions, function (index, value) {
-                if (index == 0) {
-                    extensionDropdown += "<option value='" + value.toLowerCase() + "' selected>" + value.toLowerCase() + "</option>";
-                } else {
-                    extensionDropdown += "<option value='" + value.toLowerCase() + "'>" + value.toLowerCase() + "</option>";
-                }
-            });
-        } else {
-            extensionDropdown += "<option value='.mpp' selected>.mpp</option>";
-        }
-        extensionDropdown += "</select>";
-
-        // hide options button when not in save mode
-        if (!saveMode) {
-            $("'.ui-button:contains(" + response.OptionsButtonLabel + ")'").hide();
-        } else {
-            $(".ui-dialog-buttonpane").append(fileNameTextBox);
-            if (filename != undefined && filename != '') $(".ui-dialog-buttonpane #fileNameInput").val(filename);
-            $(".ui-dialog-buttonpane").append(extensionDropdown);
-        }
-
-        // set default layout
-        selectedLayoutIcon = "gridIcon";
-
-        FoldersBreadcrumbs = [{
-            name: cloudService,
-            id: null
-        }];
-
-        var list = function (folderId) {
-            content.empty();
-            PageMethods.ListFilesInFolder(cloudService, folderId, function (files) {
-                var breadCrumbsText = "";
-                for (var folder = 0; folder < FoldersBreadcrumbs.length; folder++)
-                    breadCrumbsText += FoldersBreadcrumbs[folder].name + "\\";
-                breadcrumbsDiv.find("td").text(breadCrumbsText);
-
-                var file;
-                /********************************************List Layout design****************************************/
-                if (selectedLayoutIcon == "listIcon") {
-                    var ol = $("<ol id='FileSelectList' style='list-style-type: none; margin: 0; padding: 0; padding-top:11px; width: 100%; font-family:Arial; font-size: large; text-align: left'/>");
-
-                    content.append(ol);
-
-                    if (folderId != null) {
-                        ol.append("<li class='selectableFolder'>..</li>");
-                    }
-
-                    for (var i = 0; i < files.length; i++) {
-                        file = files[i];
-                        file.Id = file.Id.replace(new RegExp("'", "g"), "&apos;");
-                        ol.append("<li class='" + (file.isFolder ? "selectableFolder" : "selectableFile") + "' fileId='" + file.Id + "'>" + file.Name + "</li>"); // (file.FullPath ? file.FullPath : file.Name)
-                    }
-                } /********************************************Grid Layout design****************************************/
-                else {
-                    var grid = $("<table id='FileSelectGrid' style='margin: 0; padding: 0; padding-top:11px; width: 100%; font-family:Arial; font-size:12px;'/>"); // font-size:small
-                    content.append(grid);
-                    var count = 0;
-                    var width = dialogWidth - 100;
-
-                    if (folderId != null) {
-                        var row = $("<tr id='row" + Math.floor(count / 5) + "' style='max-width:" + width + "px'><td style='height:130px;'><div style='height:70%; width:100%; max-width:" + (width / 5) + "px; min-width:" + (width / 5) + "px;' class='selectableFolderGrid'></div>" +
-                                                                                                                                          "<div style='height:30%; width:100%; text-align:center; font-weight:bold; max-width:" + (width / 5) + "px; min-width:" + (width / 5) + "px;' class='subText'>..</div></td></tr>");
-                        grid.append(row);
-
-                        count++;
-                    }
-
-                    for (i = 0; i < files.length; i++) {
-                        file = files[i];
-                        file.Id = file.Id.replace(new RegExp("'", "g"), "&apos;");
-                        var cell = $("<td style='white-space:nowrap; height:130px;'><div style='height:70%; width:100%; max-width:" + (width / 5) + "px; min-width:" + (width / 5) + "px;' class='" + (file.isFolder ? "selectableFolderGrid" : "selectableFileGrid") + "' fileId='" + file.Id + "'></div>" +
-                                                                                   "<div style='height:30%; width:100%; text-align:center; max-width:" + (width / 5) + "px; min-width:" + (width / 5) + "px;' class='subText'>" + file.Name + "</div></td>"); // (file.FullPath ? file.FullPath : file.Name)
-                        // create new row for every fifth file
-                        if (count % 5 == 0) {
-                            row = $("<tr id='row" + Math.floor(count / 5) + "' style='max-width:" + width + "px'></tr>");
-                            row.append(cell);
-                            grid.append(row);
-                        } else {
-                            $('#FileSelectGrid tr:last').append(cell);
-                        }
-
-                        count++;
-                    }
-
-                    if (count < 5)
-                        for (i = count; i < 5; i++) {
-                            cell = $("<td style='white-space:nowrap; height:130px;'><div style='height:100%; width:100%; max-width:" + (width / 5) + "px; min-width:" + (width / 5) + "px;'></div></td>");
-                            $('#FileSelectGrid tr:last').append(cell);
-                        }
-                }
-
-                /*********************************************** Events ************************************************/
-                $(".selectableFile, .selectableFileGrid").click(function () {
-                    if ($(this).is(".selectedFile")) return;
-
-                    $("#ModalDialogContent .selectedFile").css('background-color', 'transparent');
-                    $("#ModalDialogContent .selectedFile").removeClass("selectedFile");
-                    $(this).addClass("selectedFile");
-                    $(this).css('background-color', '#ADD8E6');
-                    if (saveMode) {
-                        var fileName = (selectedLayoutIcon == "listIcon") ? $(this).text() : $(this).next().text();
-                        var pos = fileName.lastIndexOf('.');
-                        if (pos > 0) fileName = fileName.substring(0, pos);
-                        $(".ui-dialog-buttonpane #fileNameInput").val(fileName);
-                    }
-                });
-
-                $(".selectableFolder").click(function () {
-                    if ($(this).text() == "..") {
-                        FoldersBreadcrumbs.pop();
-                        list(FoldersBreadcrumbs[FoldersBreadcrumbs.length - 1].id);
-                    } else {
-                        FoldersBreadcrumbs.push({
-                            name: $(this).text(),
-                            id: $(this).attr('fileId')
-                        });
-                        list($(this).attr('fileId'));
-                    }
-                });
-
-                $(".selectableFolderGrid").click(function () {
-                    if (($(this).parent().children())[1].innerHTML == "..") {
-                        FoldersBreadcrumbs.pop();
-                        list(FoldersBreadcrumbs[FoldersBreadcrumbs.length - 1].id);
-                    } else {
-                        FoldersBreadcrumbs.push({
-                            name: $(this).text(),
-                            id: $(this).attr('fileId')
-                        });
-                        list($(this).attr('fileId'));
-                    }
-                });
-
-                $(".selectableFile, .selectableFolder, .selectableFileGrid, .selectableFolderGrid, #gridIcon, #listIcon").hover(function () {
-                    $(this).css('cursor', 'pointer');
-                });
-                $(".subText").hover(function () {
-                    $(this).css('cursor', 'default');
-                });
-                $(".layoutStyle").click(function () {
-                    var preferredLayout = $(this).attr('id');
-                    $(".layoutStyle").css('background-color', 'transparent');
-                    $("#" + preferredLayout).css('background-color', '#ADD8E6');
-                    if (preferredLayout == selectedLayoutIcon)
-                        return;
-                    selectedLayoutIcon = preferredLayout;
-                    list(FoldersBreadcrumbs[FoldersBreadcrumbs.length - 1].id);
-                    $(".ui-dialog-buttonpane #fileNameInput").val("");
-                });
-            });
-        };
-
-        list(null); //null will get root folder contents
-    });
 }
 
 function createHighlight(obj) {
