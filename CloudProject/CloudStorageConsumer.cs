@@ -53,7 +53,6 @@ namespace CloudProject
 	        var extension = Name.Substring(Name.LastIndexOf(".") + 1).ToLower();
 	        switch (extension)
 	        {
-                // TODO: check all
                 case "bmp":
                 case "gif":
                 case "jpeg":
@@ -90,7 +89,7 @@ namespace CloudProject
                     }
                 case "mp4":
                     {
-                        imageUrl = "Images/File Icons/unknown.png"; // TODO: find image!
+                        imageUrl = "Images/File Icons/mpeg.png";
                         Type = "video";
                         break;
                     }

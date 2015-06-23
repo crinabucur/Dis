@@ -201,12 +201,12 @@ namespace Disertatie
             HttpContext.Current.Session["postedCloudType"] = "sharepoint";
             HttpContext.Current.Session["postedCloudAction"] = action;
 
-            if (action == "saveas")
-            {
-                HttpContext.Current.Session["postedFileExtensions"] = ".MPP";
-            }
+            //if (action == "saveas")
+            //{
+            //    HttpContext.Current.Session["postedFileExtensions"] = ".MPP";
+            //}
 
-            // 14.07.2014 - fix for changes in authentication endpoint DNS
+            // fix for changes in authentication endpoint DNS
             try
             {
                 HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url + "/_forms/default.aspx");

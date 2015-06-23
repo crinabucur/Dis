@@ -112,7 +112,7 @@ function ShowDevice() {
         action: 'Handlers/FileUploadHandler.ashx', // ?formName=' + new Date().getTime()
         multiple: true,
         sizeLimit: 20971520, // 20 MB
-        uploadButtonText: "Upload a file", //"<table style='margin:0 auto; border-collapse:collapse;border-spacing:0;'><tr><td width='30%'><img style='height:300px; display:block' src='Images/UploadIcon.png'/></td><td width='70%' style='font-size:large; font-weight: bold; color:#46443E'>Browse Device</td></tr></table>",
+        uploadButtonText: "Upload a file",
         onComplete: function (id, filename, result) {
             $('#progress').hide();
             $("#gridCellDevice").find(".RemoveUploadedFilesButton").show();
@@ -457,12 +457,12 @@ function ListContents(value, folderId) {
                 switch ($(this).attr("type")) {
                     case "video":
                         {
-                            presenting = $("<video controls id='presenting' style='text-align:center; max-width:100%; max-height:100%; position:absolute; top:50%; left:50%;'><source src='Handlers/mp4.ashx?fileId=" + fileId + "&cloud=" + cloud + "' type='video/mp4'></video>"); // autoplay='autoplay'
+                            presenting = $("<video controls id='presenting' style='text-align:center; width: 500px; height:900px; max-width:100%; max-height:100%;'><source src='Handlers/mp4.ashx?fileId=" + fileId + "&cloud=" + cloud + "' type='video/mp4'></video>"); // autoplay='autoplay'
                             break;
                         }
                     case "audio":
                         {
-                            presenting = $("<audio controls id='presenting' style='text-align:center; max-width:100%; max-height:100%; position:absolute; top:50%; left:50%;'><source src='Handlers/mp3.ashx?fileId=" + fileId + "&cloud=" + cloud + "' type='audio/mpeg'></audio>"); // autoplay='autoplay'
+                            presenting = $("<audio controls id='presenting' style='text-align:center; max-width:100%; max-height:100%; position:absolute; top:50%; left:40%;'><source src='Handlers/mp3.ashx?fileId=" + fileId + "&cloud=" + cloud + "' type='audio/mpeg'></audio>"); // autoplay='autoplay'
                             break;
                         }
                     case "image":
@@ -549,6 +549,10 @@ function ListContents(value, folderId) {
                             cursor: 'pointer'
                         }
                     });
+
+                    if ($(this).attr("type") == "video" || $(this).attr("type") == "audio")
+                        $('.blockUI.blockMsg.blockPage').css('cursor', 'default');
+
                     $('.blockOverlay').click($.unblockUI);
 
                     $('.blockUI.blockMsg.blockPage').append(presenting);

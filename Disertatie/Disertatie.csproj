@@ -403,6 +403,7 @@
     <Content Include="Images\File Icons\jpeg.png" />
     <Content Include="Images\File Icons\jpg.png" />
     <Content Include="Images\File Icons\mp3.png" />
+    <Content Include="Images\File Icons\mpeg.png" />
     <Content Include="Images\File Icons\pdf.png" />
     <Content Include="Images\File Icons\png.png" />
     <Content Include="Images\File Icons\rar.png" />
